@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@import "./colors.css";
+
+@source "../**/*.{html,md,njk,11ty.js,js}";
+
+html {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+}
+
+body {
+    --s: 100px; /* control the size*/
+    --c1: #e9e9e9;
+    --c2: #ffffff;
+
+    --_g: #0000 90deg,var(--c1) 0;
+    background: 
+        conic-gradient(from 90deg at 2px 2px,var(--_g)),
+        conic-gradient(from 90deg at 1px 1px,var(--_g)),
+        var(--c2);
+    background-size: var(--s) var(--s), calc(var(--s)/5) calc(var(--s)/5);
+}
+
+.hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -10;
+    background-repeat: no-repeat;
+}
+
+header {
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+}
+
+header > * {
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+}
+
+header > h2 {
+    font-size: 1.0rem;
+    padding: 0.5rem 1rem;
+    max-width: 96rem;
+}
+
+header h1 {
+    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.white-label {
+    display: block;
+    width: fit-content;
+    color: #000;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+p {
+    margin: 1rem 0;
+}
+
+a {
+    text-decoration: underline;
+    color: #007acc;
+}
+
+a.noline {
+    text-decoration: none;
+    color: inherit;
+}
+
+article > p {
+    text-align: center;
+}
+
+blockquote {
+    @apply border-x-4 border-gray-300 px-4 italic text-gray-600;
+    @apply mt-1 mb-1 mx-auto;
+    width: fit-content;
+}
+
+img {
+    @apply max-w-full h-auto;
+    margin: 0 auto;
+    border-radius: 0.5rem;
+}
+
+header {
+    padding: 1rem 0;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3ch;
+}
+
+footer {
+    width: 100%;
+}
+
+footer > * {
+    background: #fff;
+    width: fit-content;
+    padding: 0.5rem;
+}
+
+.shadow-alpha {
+    -webkit-filter: drop-shadow(5px 5px 5px #222);
+    filter: drop-shadow(5px 5px 5px #222);
+}
+
+.bg-1-3 {
+    background: linear-gradient(90deg, #ffffff00 33%, var(--primary) 33%, var(--primary) 66%);
+}
+
+.bg-1-3-less {
+    background: linear-gradient(90deg, #ffffff00 33%, var(--secondary) 33%, var(--secondary) 66%);
+}
+
+.bg-1-3-lesser {
+    background: linear-gradient(90deg, #ffffff00 33%, var(--tertiary) 33%, var(--tertiary) 66%);
+}
+
+.bg-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.bg-secondary {
+    background: var(--secondary);
+    color: #fff;
+}
+
+.bg-tertiary {
+    background: var(--tertiary);
+}
+
+.bg-highlight {
+    background: var(--dusty-rose);
+    color: #fff;
+}

@@ -1,0 +1,12 @@
+:root {
+	/* CSS HEX */
+	--cherry-rose: #a30b37ff;
+	--dusty-rose: #bd6b73ff;
+	--periwinkle: #bbb6dfff;
+	--light-sea-green: #2ca6a4ff;
+	--white: #fcfcffff;
+
+	--primary: var(--cherry-rose);
+	--secondary: var(--dusty-rose);
+	--tertiary: var(--periwinkle);
+}
