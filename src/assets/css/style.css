@@ -127,14 +127,23 @@ footer > * {
     background: var(--primary);
     color: #fff;
 }
+.text-primary {
+    color: #fff;
+}
 
 .bg-secondary {
     background: var(--secondary);
     color: #fff;
 }
+.text-secondary {
+    color: #fff;
+}
 
 .bg-tertiary {
     background: var(--tertiary);
+}
+.text-tertiary {
+    color: #fff;
 }
 
 .bg-highlight {

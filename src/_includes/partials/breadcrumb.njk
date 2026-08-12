@@ -1,0 +1,45 @@
+{%- set currentUrl = page.url or "/" -%}
+{%- set trimmedPath = currentUrl -%}
+{%- if trimmedPath.startsWith("/") -%}
+	{%- set trimmedPath = trimmedPath.slice(1) -%}
+{%- endif -%}
+{%- if trimmedPath.endsWith("/") -%}
+	{%- set trimmedPath = trimmedPath.slice(0, -1) -%}
+{%- endif -%}
+{%- set pathSegments = [] -%}
+{%- if trimmedPath -%}
+	{%- set pathSegments = trimmedPath.split("/") -%}
+{%- endif -%}
+{%- set homeLabel = "Home" -%}
+{%- for candidate in collections.pages -%}
+	{%- if candidate.url == "/" and candidate.data.title -%}
+		{%- set homeLabel = candidate.data.title -%}
+	{%- endif -%}
+{%- endfor -%}
+
+<nav aria-label="Breadcrumb" class="mb-6 text-sm text-gray-600">
+	<ol class="flex flex-wrap items-center pl-3 py-2">
+		{%- if pathSegments.length > 0 -%}
+		<li class="bg-secondary py-1 pr-5 pl-3 rounded-l-lg"><a href="{{ '/' | url }}" class="hover:underline noline text-lg">{{ homeLabel }}</a></li>
+		{%- for segment in pathSegments -%}
+			{%- set crumbHref = "/" + pathSegments.slice(0, loop.index).join("/") + "/" -%}
+			{%- set label = segment | replace("-", " ") | title -%}
+			{%- for candidate in collections.pages -%}
+				{%- if candidate.url == crumbHref and candidate.data.title -%}
+					{%- set label = candidate.data.title -%}
+				{%- endif -%}
+			{%- endfor -%}
+			<li aria-hidden="true" class="-mx-0.5 h-8 w-1 overflow-visible relative">
+				<span class="absolute left-1/2 top-1/2 bg-white" style="width: 0.5rem; height: 3.0rem; transform: translate(-50%, -50%) rotate(25deg);"></span>
+			</li>
+			{%- if loop.last -%}
+			<li aria-current="page" class="font-semibold text-lg bg-secondary py-1 pl-5 pr-2 rounded-r-lg">{{ label }}</li>
+			{%- else -%}
+			<li class="bg-secondary py-1 pl-5 pr-5"><a href="{{ crumbHref | url }}" class="hover:underline noline text-secondary text-lg">{{ label }}</a></li>
+			{%- endif -%}
+		{%- endfor -%}
+		{%- else -%}
+		<li aria-current="page" class="font-semibold text-secondary text-lg bg-secondary py-1 px-2 rounded-lg">{{ homeLabel }}</li>
+		{%- endif -%}
+	</ol>
+</nav>

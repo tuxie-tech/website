@@ -19,7 +19,7 @@
         {%- include "partials/header.njk" -%}
 
         <div class="flex flex-col xl:flex-row items-start">
-            
+
             {%- if info or hero -%}
             <div class="xl:w-3/12 p-5 mx-auto container">
                 {%- if hero -%}
@@ -32,14 +32,13 @@
                         {{ info }}
                     </div>
                 {%- endif -%}
-                <div>
-                    {{ isMakecode }}
-                </div>
             </div>
             {%- endif -%}
             
 
-            <div class="{{ 'xl:w-10/12' if info or hero }} container mx-auto bg-white xl:mr-0 px-4 p-10 shadow-2xl">
+            <div class="{{ 'xl:w-10/12' if info or hero }} container mx-auto bg-white xl:mr-0 p-3 shadow-2xl">
+                {%- include "partials/breadcrumb.njk" -%}
+
                 {%- if gitUrl and isMakecode -%}
                 <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
                     <p>To use our extension for this module in <a href="https://makecode.microbit.org/" target="_blank">Makecode</a>, enter this URL in the extensions manager:</p>
@@ -53,6 +52,9 @@
                 {%- endif -%}
 
                 <div class="mx-auto max-w-96rem p-5 prose">
+                    {%- if title -%}
+                        <h1>{{ title }}</h1>
+                    {%- endif -%}
                     {{ content | safe }}
                 </div>
             </div>
