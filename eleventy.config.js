@@ -1,5 +1,7 @@
 import path from "node:path";
 import { readdir } from "node:fs/promises";
+import { inspect } from 'util'
+import fs from "node:fs"
 
 export default async function(eleventyConfig) {
     // Add a filter to handle URL prefixes correctly
@@ -12,26 +14,8 @@ export default async function(eleventyConfig) {
         return prefix + normalizedPath;
     });
 
-    eleventyConfig.addGlobalData("eleventyComputed", {
-        permalink: (data) => {
-            const inputPath = data.page?.inputPath || "";
-            if (!inputPath.endsWith(".md") || !inputPath.includes("/_pages/")) {
-                return;
-            }
-
-            const filePathStem = data.page?.filePathStem || "";
-            const relativeStem = filePathStem.replace(/^\/_pages/, "");
-
-            if (relativeStem === "/index" || relativeStem === "") {
-                return "/";
-            }
-
-            if (relativeStem.endsWith("/index")) {
-                return `${relativeStem.slice(0, -"/index".length)}/`;
-            }
-
-            return `${relativeStem}/`;
-        }
+    eleventyConfig.addFilter("safedump", (obj) => {
+        return inspect(obj, { depth: null, colors: false });
     });
 
     eleventyConfig.addCollection("pages", (collectionsApi) => {
@@ -47,19 +31,181 @@ export default async function(eleventyConfig) {
             .filter((item) => !item.inputPath.endsWith("/src/_pages/catalog/index.md"));
     });
 
+    eleventyConfig.addCollection("catalogIndex", (collectionsApi) => {
+        const seen = new Set();
+        const combined = [
+            ...collectionsApi.getFilteredByTag("hardware"),
+            ...collectionsApi.getFilteredByTag("software")
+        ];
+
+        return combined.filter((item) => {
+            const key = item.inputPath.replaceAll("\\", "/");
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
+    });
+
     eleventyConfig.addPassthroughCopy("src/assets/img");
 
 
     const mediaExtensions = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif", ".ico", ".pdf", ".mp3", ".mp4", ".webm", ".ogg"]);
     const pagesRoot = path.join(process.cwd(), "src/_pages");
+    const catalogRoot = path.join(pagesRoot, "catalog");
+    const catalogSubmodules = new Set();
+    const catalogSubmoduleUrls = new Map();
+
+    const toPosixPath = (value) => value.replaceAll(path.sep, "/");
+    const hasCatalogModuleFile = (moduleName, fileName) => {
+        return fs.existsSync(path.join(catalogRoot, moduleName, fileName));
+    };
+
+    try {
+        const catalogEntries = await readdir(catalogRoot, { withFileTypes: true });
+        for (const entry of catalogEntries) {
+            if (!entry.isDirectory()) {
+                continue;
+            }
+
+            const modulePath = path.join(catalogRoot, entry.name);
+            if (fs.existsSync(path.join(modulePath, ".git"))) {
+                catalogSubmodules.add(entry.name);
+            }
+        }
+    } catch {
+        // Catalog directory is optional in some environments.
+    }
+
+    try {
+        const gitmodulesPath = path.join(process.cwd(), ".gitmodules");
+        if (fs.existsSync(gitmodulesPath)) {
+            const gitmodules = fs.readFileSync(gitmodulesPath, "utf8");
+            const sections = gitmodules.split(/\n(?=\[submodule\s+")/);
+
+            for (const section of sections) {
+                const pathMatch = section.match(/^\s*path\s*=\s*(.+)$/m);
+                const urlMatch = section.match(/^\s*url\s*=\s*(.+)$/m);
+
+                if (!pathMatch || !urlMatch) {
+                    continue;
+                }
+
+                const modulePath = pathMatch[1].trim().replaceAll("\\", "/");
+                const url = urlMatch[1].trim();
+                const catalogPathMatch = modulePath.match(/^src\/_pages\/catalog\/([^/]+)$/);
+
+                if (!catalogPathMatch) {
+                    continue;
+                }
+
+                const moduleName = catalogPathMatch[1];
+                if (catalogSubmodules.has(moduleName)) {
+                    catalogSubmoduleUrls.set(moduleName, url);
+                }
+            }
+        }
+    } catch {
+        // Missing or malformed .gitmodules should not break builds.
+    }
+
+    eleventyConfig.addGlobalData("eleventyComputed", {
+        isMakecode: (data) => {
+            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
+            const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);
+            if (docMatch && hasCatalogModuleFile(docMatch[1], "pxt.json")) {
+                return true;
+            }
+        },
+        gitUrl: (data) => {
+            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
+            const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);
+            if (docMatch && catalogSubmoduleUrls.has(docMatch[1])) {
+                return catalogSubmoduleUrls.get(docMatch[1]);
+            }
+        },
+        permalink: (data) => {
+            const inputPath = data.page?.inputPath || "";
+            if (!inputPath.endsWith(".md") || !inputPath.includes("/_pages/")) {
+                return;
+            }
+
+            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
+            const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);
+            if (docMatch && catalogSubmodules.has(docMatch[1])) {
+                const moduleName = docMatch[1];
+                const stemWithinDoc = docMatch[2] || "index";
+
+                if (stemWithinDoc === "index") {
+                    return `/catalog/${moduleName}/`;
+                }
+
+                if (stemWithinDoc.endsWith("/index")) {
+                    const folderStem = stemWithinDoc.slice(0, -"/index".length);
+                    return `/catalog/${moduleName}/${folderStem}/`;
+                }
+
+                return `/catalog/${moduleName}/${stemWithinDoc}/`;
+            }
+
+            const submoduleMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/(.*)$/);
+            if (
+                submoduleMatch
+                && catalogSubmodules.has(submoduleMatch[1])
+                && !submoduleMatch[2].startsWith("doc/")
+            ) {
+                return false;
+            }
+
+            const relativeStem = filePathStem.replace(/^\/_pages/, "");
+
+            if (relativeStem === "/index" || relativeStem === "") {
+                return "/";
+            }
+
+            if (relativeStem.endsWith("/index")) {
+                return `${relativeStem.slice(0, -"/index".length)}/`;
+            }
+
+            return `${relativeStem}/`;
+        }
+    });
+
+    const toCatalogOutputPath = (entryPath) => {
+        const relativeToPages = toPosixPath(path.relative(pagesRoot, entryPath));
+        const docMatch = relativeToPages.match(/^catalog\/([^/]+)\/doc\/(.+)$/);
+
+        if (docMatch && catalogSubmodules.has(docMatch[1])) {
+            return `/catalog/${docMatch[1]}/${docMatch[2]}`;
+        }
+
+        return `/${relativeToPages}`;
+    };
 
     const walkPagesTree = async (directoryPath) => {
         const entries = await readdir(directoryPath, { withFileTypes: true });
 
+        console.log( `[book] Walking tree of '${directoryPath}'` )
+
         for (const entry of entries) {
+            if( entry.name.startsWith('.') )
+                continue;
+
             const entryPath = path.join(directoryPath, entry.name);
 
             if (entry.isDirectory()) {
+                // Check if this is a submodule
+                if( fs.existsSync(path.join( entryPath, ".git" )) ) {
+                    if( !fs.existsSync(path.join( entryPath, "doc" )) ) {
+                        console.log( `[book] Module '${entry.name}' has no 'doc' subdirectory.` );
+                        continue;
+                    }
+                    console.log(`[book] Module '${entry.name}' is a valid submodule.` );
+                    await walkPagesTree( path.join( entryPath, "doc" ) );
+                    continue;
+                }
+
                 await walkPagesTree(entryPath);
                 continue;
             }
@@ -69,16 +215,17 @@ export default async function(eleventyConfig) {
                 continue;
             }
 
-            const relativePath = path.relative(process.cwd(), entryPath).replaceAll(path.sep, "/");
-            const relativeToPages = path.relative(pagesRoot, entryPath).replaceAll(path.sep, "/");
-            const targetPath = `/${relativeToPages}`;
+            const relativePath = toPosixPath(path.relative(process.cwd(), entryPath));
+            const targetPath = toCatalogOutputPath(entryPath);
 
+            console.log( `[book] Copying '${relativePath}' to '${targetPath}'` );
             eleventyConfig.addPassthroughCopy({
                 [relativePath]: targetPath
             });
         }
     };
     await walkPagesTree(pagesRoot);
+    console.log( `[book] Finished walking tree of '${pagesRoot}'` );
 
     //eleventyConfig.addCollection("pages", async (collectionsApi) => collectionsApi.getAllSorted() );
 	

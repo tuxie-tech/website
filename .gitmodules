@@ -1,0 +1,18 @@
+[submodule "src/_pages/catalog/mikroe-2879"]
+	path = src/_pages/catalog/mikroe-2879
+	url = https://github.com/tuxie-tech/mikroe-2879
+[submodule "src/_pages/catalog/pxt-rib-bit"]
+	path = src/_pages/catalog/pxt-rib-bit
+	url = https://github.com/tuxie-tech/pxt-rib-bit.git
+[submodule "src/_pages/catalog/pxt-rib-bit-datalogger"]
+	path = src/_pages/catalog/pxt-rib-bit-datalogger
+	url = https://github.com/tuxie-tech/pxt-rib-bit-datalogger.git
+[submodule "src/_pages/catalog/pxt-rib-bit-gps"]
+	path = src/_pages/catalog/pxt-rib-bit-gps
+	url = https://github.com/tuxie-tech/pxt-rib-bit-gps.git
+[submodule "src/_pages/catalog/pxt-edge-serial"]
+	path = src/_pages/catalog/pxt-edge-serial
+	url = https://github.com/tuxie-tech/pxt-edge-serial.git
+[submodule "src/_pages/catalog/deBUG-click"]
+	path = src/_pages/catalog/deBUG-click
+	url = https://github.com/tuxie-tech/deBUG-click.git

@@ -1,0 +1,69 @@
+<iframe id="makecoderenderer" style="position: absolute; left: 0; bottom: 0; width: 1px; height: 1px;" src="https://makecode.microbit.org/--docs?render=1"></iframe>
+<script>
+var makeCodeRenderPre = makeCodeRenderPre || (function () {
+    // pre waiting to be rendered
+    // when undefined, iframe is loaded and ready
+    var pendingPres = [];
+
+    function renderPre(pre) {
+        console.log('render ' + pre.id)
+        var f = document.getElementById("makecoderenderer");
+        // check if iframe is added and ready (pendingPres is undefined)
+        if (!f || !!pendingPres) {
+            // queue up
+            pendingPres.push(pre);
+        } else {
+            f.contentWindow.postMessage({
+                type: "renderblocks",
+                id: pre.id,
+                code: pre.innerText
+            }, "https://makecode.microbit.org/");
+        }
+    }
+
+    // listen for messages
+    window.addEventListener("message", function (ev) {
+        var msg = ev.data;
+        if (msg.source != "makecode") return;
+
+        console.log(msg.type)
+        switch (msg.type) {
+            case "renderready":
+                // flush pending requests            				
+                var pres = pendingPres;
+                // set as undefined to notify that iframe is ready
+                pendingPres = undefined;
+                pres.forEach(function (pre) { renderPre(pre); })
+                break;
+            case "renderblocks":
+                var svg = msg.svg; // this is an string containing SVG
+                var id = msg.id; // this is the id you sent
+                // replace text with svg
+                var img = document.createElement("img");
+                img.src = msg.uri;
+                img.width = msg.width;
+                img.height = msg.height;
+                var code = document.getElementById(id);
+                code.parentElement.insertBefore(img, code)
+                code.parentElement.removeChild(code);
+                break;
+        }
+    }, false);
+
+    return renderPre;
+})();
+
+function renderSnippets() {
+    // TODO ADD RENDER LOGIC HERE
+    let pres = document.getElementsByTagName("pre");
+    Array.prototype.forEach.call(pres, function (pre) {
+        makeCodeRenderPre(pre);
+    })
+}
+
+// load the renderer
+document.addEventListener('DOMContentLoaded', function() {
+   renderSnippets();
+}, false);
+
+</script>

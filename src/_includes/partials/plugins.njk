@@ -1,0 +1,8 @@
+<!-- Include the MakeCode renderer iframe -->
+{%- if plugins | length > 0 -%}
+{%- for plugin in plugins -%}
+    {%- if plugin == "ts-to-blocks" -%}
+        {%- include "plugins/ts-to-blocks.njk" -%}
+    {%- endif -%}
+{%- endfor -%}
+{%- endif -%}

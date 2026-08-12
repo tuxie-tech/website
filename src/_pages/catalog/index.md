@@ -5,9 +5,11 @@ title: The Boards Catalog
 {%- import "components/tile.njk" as tile -%}
 
 <div class="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-5 justify-center items-stretch">
-{% for entry in collections.catalog %}
-{{ tile.clickable(entry.data.title, hero=entry.url + "/" + entry.data.hero, url=entry.url ) }}
-{% endfor %}
+{%- for entry in collections.catalogIndex %}
+    {%- if entry.url %}
+        {{ tile.clickable(entry.data.title, hero=entry.url + "/" + entry.data.hero, url=entry.url ) }}
+    {%- endif %}
+{%- endfor %}
 </div>
 
 ## Collections
@@ -17,3 +19,10 @@ title: The Boards Catalog
 {{ name }}: {{ items | length }}<br />
 {%- endfor -%}
 </pre>
+
+<h3>Pages</h3>
+<ul>
+{%- for page in collections.pages -%}
+  <li><pre>{{ page.inputPath }}</pre></li>
+{%- endfor -%}
+</ul>

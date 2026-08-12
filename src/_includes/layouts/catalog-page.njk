@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{{ '/assets/css/main.css' | url }}">
 </head>
 <body>
+    {%- include "partials/plugins.njk" -%}
+
     <div class="hero-bg absolute top-0 left-0 w-screen overflow-clip">
         {%- if hero -%}
         {%- else -%}
@@ -17,22 +19,40 @@
         {%- include "partials/header.njk" -%}
 
         <div class="flex flex-col xl:flex-row items-start">
-            {%- if info -%}
+            
+            {%- if info or hero -%}
             <div class="xl:w-3/12 p-5 mx-auto container">
-                <div class="shadow-lg bg-white mx-auto max-w-96rem p-5">
-                    {{ info }}
+                {%- if hero -%}
+                    <div class="mx-auto">
+                        <img src="{{ hero }}" class="w-4/5 shadow-alpha" />
+                    </div>
+                {%- endif -%}
+                {%- if info -%}
+                    <div class="shadow-2xl bg-white mx-auto max-w-96rem p-5 prose">
+                        {{ info }}
+                    </div>
+                {%- endif -%}
+                <div>
+                    {{ isMakecode }}
                 </div>
             </div>
             {%- endif -%}
             
-            {%- if hero -%}
-            <div class="xl:w-3/12 mx-auto">
-                <img src="{{ hero }}" class="w-4/5 shadow-alpha" />
-            </div>
-            {%- endif -%}
 
-            <div class="{{ 'xl:w-6/12' if info }} container mx-auto bg-white xl:mr-0 px-4 p-10">
-                <div class="mx-auto max-w-96rem p-5">
+            <div class="{{ 'xl:w-10/12' if info or hero }} container mx-auto bg-white xl:mr-0 px-4 p-10 shadow-2xl">
+                {%- if gitUrl and isMakecode -%}
+                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
+                    <p>To use our extension for this module in <a href="https://makecode.microbit.org/" target="_blank">Makecode</a>, enter this URL in the extensions manager:</p>
+                    <p><a href="{{ gitUrl }}" target="_blank">{{ gitUrl }}</a></p>
+                </div>
+                {%- endif -%}
+                {%- if gitUrl -%}
+                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
+                    <p>You can help improve this documentation! We accept contributions via <a href="{{ gitUrl }}" target="_blank">Github</a></p>
+                </div>
+                {%- endif -%}
+
+                <div class="mx-auto max-w-96rem p-5 prose">
                     {{ content | safe }}
                 </div>
             </div>
