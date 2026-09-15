@@ -24,7 +24,8 @@
   },
   "homepage": "https://github.com/tuxie-tech/website#readme",
   "dependencies": {
-    "@11ty/eleventy": "^3.1.6"
+    "@11ty/eleventy": "^3.1.6",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.0",

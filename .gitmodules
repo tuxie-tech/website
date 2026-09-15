@@ -22,3 +22,6 @@
 	path = src/_pages/catalog/deBUG-click
 	url = https://github.com/tuxie-tech/deBUG-click.git
 	branch = main
+[submodule "src/_pages/catalog/tuxietech-hapti-bit"]
+	path = src/_pages/catalog/tuxietech-hapti-bit
+	url = https://github.com/tuxie-tech/hapti-bit.git

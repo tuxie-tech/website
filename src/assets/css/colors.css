@@ -6,7 +6,15 @@
 	--light-sea-green: #2ca6a4ff;
 	--white: #fcfcffff;
 
-	--primary: var(--cherry-rose);
+	--accent: #FF9A00;
+	--link: #0066CC;
+	--success: #C5E1A5;
+	--light: #F2F2F2;
+	--dark: #333333;
+	--gray: #BDBDBD;
+
+	--primary: var(--accent);
 	--secondary: var(--dusty-rose);
 	--tertiary: var(--periwinkle);
+
 }

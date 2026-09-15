@@ -5,22 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }} - TuxieTech</title>
     <link rel="stylesheet" href="{{ '/assets/css/main.css' | url }}">
+    {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="flex flex-col items-stretch min-h-screen bg-1-3 px-4">
-        {%- include "partials/header.njk" -%}
-        
-        <main class="container mx-auto px-4 p-10 shadow-lg bg-white">
-            <article class="prose">
-                {{ content | safe }}
-            </article>
-        </main>
-        <div class="flex-grow">&nbsp;</div>
-        <footer class="footer sticky-footer text-gray-400 py-4 px-1 flex">
-            <div class="ml-auto">Designed by <a href="https://johnvidler.co.uk/">John Vidler</a></div>
-            <div>Built with <a href="https://www.11ty.dev/">Eleventy</a></div>
-        </footer>
+    <div class="logo-layer">
+        {% block plugins %}{% endblock %}
+        {% block fullpage %}
+        <div class="flex flex-col items-stretch min-h-screen bg-1-3 px-4">
+            {%- include "partials/header.njk" -%}
+            
+            {% block content %}
+            <main class="container mx-auto px-4 p-10 shadow-lg bg-white shadow-alpha-light">
+                <article class="prose">
+                    {{ content | safe }}
+                </article>
+            </main>
+            {% endblock %}
+            {% block footer %}
+            <div class="flex-grow">&nbsp;</div>
+            {%- include "partials/footer.njk" -%}
+            {% endblock %}
+        </div>
+        {% endblock %}
     </div>
-    
 </body>
 </html>

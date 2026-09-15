@@ -1,8 +1,8 @@
 {% macro simple(title, hero='') %}
-<div class="h-full w-full p-4 bg-highlight shadow-lg rounded-lg">
+<div class="h-full w-full p-4 bg-gray-300 shadow-lg rounded-lg">
     <h3 class="text-xl font-semibold mb-2 text-center">{{ title }}</h3>
     {%- if hero -%}
-        <img src="{{ hero }}" class="w-full h-auto mb-2" />
+        <img src="{{ hero }}" class="w-full h-auto mb-2 p-5" loading="lazy" />
     {%- endif -%}
 </div>
 {% endmacro %}

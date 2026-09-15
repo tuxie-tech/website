@@ -2,8 +2,14 @@ import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { inspect } from 'util'
 import fs from "node:fs"
+import pagesPlugin from "./eleventy-plugins/pages.js";
+
+const templateExtensions = [".html", ".xml", ".njk", ".md"];
+const mediaExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif", ".ico", ".pdf", ".mp3", ".mp4", ".webm", ".ogg"];
 
 export default async function(eleventyConfig) {
+    eleventyConfig.addPlugin(pagesPlugin, { templateExtensions, mediaExtensions });
+
     // Add a filter to handle URL prefixes correctly
     eleventyConfig.addFilter("url", (path) => {
         const pathPrefix = process.env.PATH_PREFIX || "/";
@@ -51,7 +57,6 @@ export default async function(eleventyConfig) {
     eleventyConfig.addPassthroughCopy("src/assets/img");
 
 
-    const mediaExtensions = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif", ".ico", ".pdf", ".mp3", ".mp4", ".webm", ".ogg"]);
     const pagesRoot = path.join(process.cwd(), "src/_pages");
     const catalogRoot = path.join(pagesRoot, "catalog");
     const catalogSubmodules = new Set();
@@ -172,62 +177,7 @@ export default async function(eleventyConfig) {
         }
     });
 
-    const toCatalogOutputPath = (entryPath) => {
-        const relativeToPages = toPosixPath(path.relative(pagesRoot, entryPath));
-        const docMatch = relativeToPages.match(/^catalog\/([^/]+)\/doc\/(.+)$/);
-
-        if (docMatch && catalogSubmodules.has(docMatch[1])) {
-            return `/catalog/${docMatch[1]}/${docMatch[2]}`;
-        }
-
-        return `/${relativeToPages}`;
-    };
-
-    const walkPagesTree = async (directoryPath) => {
-        const entries = await readdir(directoryPath, { withFileTypes: true });
-
-        console.log( `[book] Walking tree of '${directoryPath}'` )
-
-        for (const entry of entries) {
-            if( entry.name.startsWith('.') )
-                continue;
-
-            const entryPath = path.join(directoryPath, entry.name);
-
-            if (entry.isDirectory()) {
-                // Check if this is a submodule
-                if( fs.existsSync(path.join( entryPath, ".git" )) ) {
-                    if( !fs.existsSync(path.join( entryPath, "doc" )) ) {
-                        console.log( `[book] Module '${entry.name}' has no 'doc' subdirectory.` );
-                        continue;
-                    }
-                    console.log(`[book] Module '${entry.name}' is a valid submodule.` );
-                    await walkPagesTree( path.join( entryPath, "doc" ) );
-                    continue;
-                }
-
-                await walkPagesTree(entryPath);
-                continue;
-            }
-
-            const extension = path.extname(entry.name).toLowerCase();
-            if (!mediaExtensions.has(extension)) {
-                continue;
-            }
-
-            const relativePath = toPosixPath(path.relative(process.cwd(), entryPath));
-            const targetPath = toCatalogOutputPath(entryPath);
-
-            console.log( `[book] Copying '${relativePath}' to '${targetPath}'` );
-            eleventyConfig.addPassthroughCopy({
-                [relativePath]: targetPath
-            });
-        }
-    };
-    await walkPagesTree(pagesRoot);
-    console.log( `[book] Finished walking tree of '${pagesRoot}'` );
-
-    //eleventyConfig.addCollection("pages", async (collectionsApi) => collectionsApi.getAllSorted() );
+    console.log( `[book] Finished configuring '${pagesRoot}'` );
 	
     return {
         pathPrefix: process.env.PATH_PREFIX || "/",
@@ -236,7 +186,7 @@ export default async function(eleventyConfig) {
             output: "dist",
             includes: "_includes"
         },
-        templateFormats: ["html", "njk", "md"],
+        templateFormats: templateExtensions.map((ext) => ext.slice(1)),
         htmlTemplateEngine: "njk",
         markdownTemplateEngine: "njk"
     }

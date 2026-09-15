@@ -1,0 +1,21 @@
+{% extends "layouts/base.njk" %}
+
+{% block plugins %}
+    {%- include "partials/plugins.njk" -%}
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-col xl:flex-row items-start">
+        
+        <div class="container mx-auto bg-white xl:mr-0 p-3 shadow-2xl">
+            {%- include "partials/breadcrumb.njk" -%}
+
+            <div class="mx-auto max-w-96rem prose">
+                {%- if title -%}
+                    <h1>{{ title }}</h1>
+                {%- endif -%}
+                {{ content | safe }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
