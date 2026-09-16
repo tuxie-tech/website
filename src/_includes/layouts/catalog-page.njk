@@ -58,6 +58,14 @@
                 </div>
                 {%- endif -%}
 
+                {%- if canPurchase -%}
+                {%- set ref = " (" ~ mfn ~ ")" if mfn else "" -%}
+                {%- set subject = ("TuxieTech Product Enquiry: " ~ title ~ ref) | urlencode -%}
+                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
+                    <p>For availability and pricing information, please contact <a href="mailto:j.vidler@lancaster.ac.uk?subject={{ subject }}" target="_blank">John at j.vidler@lancaster.ac.uk</a>.</p>
+                </div>
+                {%- endif -%}
+
                 <div class="mx-auto max-w-96rem p-5 prose">
                     {%- if title -%}
                         <h1>{{ title }}</h1>

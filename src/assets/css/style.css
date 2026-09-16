@@ -70,7 +70,7 @@ header h1 {
 }
 
 p {
-    margin: 1rem 0;
+    margin: 1rem auto;
 }
 
 a {
@@ -182,17 +182,17 @@ footer > * {
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
     margin: 0.5rem 0;
     font-weight: bold;
-    text-align: center;
 }
 
-.prose h1 { font-size: 4rem; }
+.prose h1 { font-size: 4rem; text-align: center; }
 .prose h2 { font-size: 2.75rem; }
 .prose h3 { font-size: 1.5rem; }
 
 x-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    gap: 5rem;
+    padding: 2rem;
 }
 
 x-shelf {
@@ -241,4 +241,48 @@ x-caption {
     .only-wide {
         display: block;
     }
+}
+
+x-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: white;
+    width: 100%;
+    max-width: 80rem;
+    height: 100%;
+    border-radius: 0.5rem;
+    -webkit-filter: drop-shadow(0 0 5px #bbbbbb88);
+    filter: drop-shadow(0 0 5px #bbbbbb88);
+}
+
+x-tile > h3 {
+    margin: 0 !important;
+}
+
+x-tile > p {
+    text-decoration: none;
+    color: var(--text-light);
+}
+
+x-tile > * > img {
+    overflow: hidden;
+    height: 250px;
+    object-fit: contain;
+
+}
+
+x-tile:hover {
+    background-color: var(--light);
+}
+
+x-box {
+    display: block;
+    margin: 2rem auto;
+    margin-top: 1rem;
+    padding: 1rem;
+    max-width: 800px;
+    background-color: var(--success);
+    -webkit-filter: drop-shadow(0 0 5px #bbbbbb88);
+    filter: drop-shadow(0 0 5px #bbbbbb88);
 }

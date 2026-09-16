@@ -13,6 +13,9 @@
 	--dark: #333333;
 	--gray: #BDBDBD;
 
+	--text-light: #333333;
+	--text-default: #000000;
+
 	--primary: var(--accent);
 	--secondary: var(--dusty-rose);
 	--tertiary: var(--periwinkle);
