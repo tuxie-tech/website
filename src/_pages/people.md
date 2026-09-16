@@ -32,6 +32,11 @@ We're a group of researchers (and their fuzzy friends!) who want to create techn
     <x-card>
         <x-photo><img src={{ "assets/img/staff/kashka.png" | url }} /></x-photo>
         <x-name>Kashka Vidler</x-name>
-        <x-title>Security Officer</x-title>
+        <x-title>Security Consultant</x-title>
+    </x-card>
+    <x-card>
+        <x-photo><img src={{ "assets/img/staff/heatherandroxy.png" | url }} /></x-photo>
+        <x-name>Dr. Heather Shaw &amp; Roxy</x-name>
+        <x-title>Founder // Researcher</x-title>
     </x-card>
 </x-grid>
