@@ -54,6 +54,38 @@ export default async function(eleventyConfig) {
         });
     });
 
+    eleventyConfig.addCollection("hardwareIndex", (collectionsApi) => {
+        const seen = new Set();
+        const combined = [
+            ...collectionsApi.getFilteredByTag("hardware")
+        ];
+
+        return combined.filter((item) => {
+            const key = item.inputPath.replaceAll("\\", "/");
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
+    });
+
+    eleventyConfig.addCollection("softwareIndex", (collectionsApi) => {
+        const seen = new Set();
+        const combined = [
+            ...collectionsApi.getFilteredByTag("software")
+        ];
+
+        return combined.filter((item) => {
+            const key = item.inputPath.replaceAll("\\", "/");
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
+    });
+
     eleventyConfig.addPassthroughCopy("src/assets/img");
 
 
