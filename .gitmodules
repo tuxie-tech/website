@@ -13,3 +13,6 @@
 [submodule "src/_pages/catalog/tuxietech-hapti-bit"]
 	path = src/_pages/catalog/tuxietech-hapti-bit
 	url = https://github.com/tuxie-tech/hapti-bit.git
+[submodule "src/_pages/catalog/jaccess-bit"]
+	path = src/_pages/catalog/jaccess-bit
+	url = https://github.com/tuxie-tech/jaccess-bit

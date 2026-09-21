@@ -198,6 +198,7 @@ x-grid {
 x-shelf {
     display:flex;
     flex-direction: row;
+    align-items: stretch;
     justify-content: center;
     gap: 0.5rem;
 }
@@ -209,9 +210,17 @@ x-card {
 }
 
 x-photo {
-    display: block;
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     max-width: 350px;
+}
+
+x-photo img {
+    display: block;
+    max-width: 100%;
     height: auto;
     border-radius: 0.5rem;
 }
@@ -228,6 +237,7 @@ x-title {
 
 x-caption {
     display: block;
+    flex: 0 0 auto;
     font-size: 0.9rem;
     color: #666;
     text-align: center;

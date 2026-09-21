@@ -21,7 +21,7 @@ tags:
                 <div class="relative w-full">
                     <img src="{{ entry.url + hero }}" class="mb-2 p-5" loading="lazy" />
                     {%- if secondaryHero -%}
-                    <img src="{{ entry.url + secondaryHero }}" class="absolute inset-0 mb-2 p-5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" loading="lazy" />
+                    <img src="{{ entry.url + secondaryHero }}" class="absolute inset-0 mb-2 p-5 bg-[var(--light)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" loading="lazy" />
                     {%- endif -%}
                 </div>
                 <h3 class="text-xl font-semibold mb-2 text-center">{{ entry.data.title }}</h3>
