@@ -1,5 +1,5 @@
 ---
-layout: layouts/catalog-page
+layout: layouts/catalog
 title: Catalog
 tags:
     - catalog

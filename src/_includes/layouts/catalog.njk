@@ -1,0 +1,59 @@
+{% extends "layouts/base.njk" %}
+
+{% block plugins %}
+    {%- include "partials/plugins.njk" -%}
+{% endblock %}
+
+{% block fullpage %}
+    <div class="flex flex-col min-h-screen bg-1-3-lesser px-4">
+        {%- include "partials/header.njk" -%}
+
+        <div class="flex flex-col xl:flex-row items-start">
+
+            {%- if info or hero -%}
+            <div class="xl:w-3/12 xl:block hidden p-5 mx-auto container">
+                {%- if hero -%}
+                    <div class="mx-auto pt-35 flex flex-col gap-7">
+                        {%- if hero is iterable and hero is not string -%}
+                            {%- for h in hero -%}
+                                <img src="{{ h }}" class="w-4/5 shadow-alpha" loading="lazy" />
+                                {%- if loop.index0 == 0 and info -%}
+                                    <div class="shadow-2xl bg-white mx-auto max-w-96rem p-5 prose">
+                                        {{ info }}
+                                    </div>
+                                {%- endif -%}
+                            {%- endfor -%}
+                        {%- else -%}
+                            <img src="{{ hero }}" class="w-4/5 shadow-alpha" loading="lazy" />
+                            {%- if info -%}
+                                <div class="shadow-2xl bg-white mx-auto max-w-96rem p-5 prose">
+                                    {{ info }}
+                                </div>
+                            {%- endif -%}
+                        {%- endif -%}
+                    </div>
+                {%- else -%}
+                    {%- if info -%}
+                        <div class="shadow-2xl bg-white mx-auto max-w-96rem p-5 prose">
+                            {{ info }}
+                        </div>
+                    {%- endif -%}
+                {%- endif -%}
+            </div>
+            {%- endif -%}
+            
+
+            <div class="{{ 'xl:w-10/12' if info or hero }} container mx-auto bg-white xl:mr-0 p-3 shadow-2xl">
+                {%- include "partials/breadcrumb.njk" -%}
+
+                <div class="mx-auto max-w-96rem p-5 prose">
+                    {%- if title -%}
+                        <h1>{{ title }}</h1>
+                    {%- endif -%}
+                    {{ content | safe }}
+                </div>
+            </div>
+        </div>
+        {%- include "partials/footer.njk" -%}
+    </div>
+{% endblock %}
