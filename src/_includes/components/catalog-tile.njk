@@ -1,0 +1,35 @@
+{% macro render(entry) %}
+    {%- if entry.url and entry.inputPath.endsWith("/index.md") -%}
+        {%- set hero = entry.data.hero[0] if entry.data.hero is not string else entry.data.hero -%}
+        {%- set secondaryHero = entry.data.hero[1] if entry.data.hero is not string and entry.data.hero.length > 1 else '' -%}
+        {%- if hero and entry.data.info -%}
+        <a href="{{ entry.url }}" class="noline group block w-full max-w-80">
+            <x-tile>
+                <div class="relative w-full">
+                    <img src="{{ entry.url + hero }}" class="mb-2 p-5" loading="lazy" />
+                    {%- if secondaryHero -%}
+                    <img src="{{ entry.url + secondaryHero }}" class="absolute inset-0 mb-2 p-5 bg-[var(--light)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" loading="lazy" />
+                    {%- endif -%}
+                </div>
+                {%- if entry.data.isMakecode -%}
+                <span class="ribbon">Makecode</span>
+                {%- endif -%}
+                <h3 class="text-xl font-semibold mb-2 text-center">{{ entry.data.title }}</h3>
+                {%- if entry.data.squareId -%}
+                <div class="text-center font-semibold text-xl text-pricing my-1" data-tile-price="{{ entry.data.squareId | escape }}" hidden></div>
+                {%- endif -%}
+                <p class="text-center">{{ entry.data.info }}</p>
+                {%- if entry.data.tags.length > 0 -%}
+                <div class="flex flex-wrap gap-1 w-fit mx-auto">
+                {%- for tag in entry.data.tags -%}
+                {# {%- if tag != "catalog" -%}
+                    <div class="py-0.5 px-1.5 bg-secondary rounded">{{ tag }}</div>
+                {%- endif -%} #}
+                {%- endfor -%}
+                </div>
+                {%- endif -%}
+            </x-tile>
+        </a>
+        {%- endif -%}
+    {%- endif -%}
+{% endmacro %}

@@ -120,6 +120,104 @@ footer > * {
     padding: 0.5rem;
 }
 
+.shopping-cart {
+    width: min(100%, 64rem);
+    margin: 0 auto;
+}
+
+.shopping-cart__status {
+    margin: 1rem 0;
+}
+
+.shopping-cart__table-wrap {
+    overflow-x: auto;
+}
+
+.shopping-cart__table {
+    width: 100%;
+    min-width: 42rem;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.shopping-cart__table th,
+.shopping-cart__table td {
+    padding: 0.75rem;
+}
+
+.shopping-cart__table thead th {
+    color: #555;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--gray);
+}
+
+.shopping-cart__table tbody[data-cart-product-group] > tr:last-child > th,
+.shopping-cart__table tbody[data-cart-product-group] > tr:last-child > td {
+    border-bottom: 1px solid var(--gray);
+}
+
+.shopping-cart__table tbody th {
+    font-weight: 600;
+}
+
+.shopping-cart__product-heading th {
+    padding-top: 1.5rem;
+    color: var(--dark);
+    font-size: 1rem;
+}
+
+.shopping-cart__table td:nth-last-child(2) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.shopping-cart__summary {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2rem;
+    padding: 1rem 0;
+    font-size: 1.1rem;
+}
+
+.shopping-cart__summary strong {
+    min-width: 6rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.shopping-cart__remove,
+.shopping-cart__continue {
+    color: var(--link);
+    cursor: pointer;
+}
+
+.shopping-cart__remove {
+    border: 0;
+    padding: 0.5rem;
+    background: transparent;
+    text-decoration: underline;
+}
+
+.shopping-cart__continue {
+    display: inline-block;
+    margin: 0.75rem 0;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.quantity-control-shell [hidden] {
+    display: none;
+}
+
 .shadow-alpha {
     -webkit-filter: drop-shadow(5px 5px 5px #222);
     filter: drop-shadow(5px 5px 5px #222);
@@ -256,7 +354,7 @@ x-caption {
 x-tile {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: top;
     background-color: white;
     width: 100%;
     max-width: 80rem;
@@ -264,6 +362,25 @@ x-tile {
     border-radius: 0.5rem;
     -webkit-filter: drop-shadow(0 0 5px #bbbbbb88);
     filter: drop-shadow(0 0 5px #bbbbbb88);
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Diagonal corner ribbon, clipped by the tile's overflow */
+x-tile > .ribbon {
+    position: absolute;
+    top: 2.25rem;
+    right: -2.7rem;
+    width: 12rem;
+    padding: 0.25rem 0;
+    transform: rotate(45deg);
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    background-color: var(--primary);
+    color: var(--dark);
+    z-index: 10;
 }
 
 x-tile > h3 {
@@ -273,6 +390,7 @@ x-tile > h3 {
 x-tile > p {
     text-decoration: none;
     color: var(--text-light);
+    flex-grow: 1;
 }
 
 x-tile > * > img {

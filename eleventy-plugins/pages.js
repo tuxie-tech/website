@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse as yamlParse } from "yaml";
+import { isOptimizable, queueImage } from "./images.js";
+
+const IMAGE_WATCH_EXTENSIONS = "png,jpg,jpeg,webp,avif";
 
 const toPosixPath = (value) => value.replaceAll(path.sep, "/");
 
@@ -63,11 +66,24 @@ export default function pagesPlugin(eleventyConfig, { templateExtensions, mediaE
     // Merges a parent's tags with a page's own, de-duplicated.
     const mergeTags = (parentTags, ownTags) => [...new Set([...(parentTags || []), ...(ownTags || [])])];
 
+    // Passthrough copies can only be registered during config setup, so rescans skip them.
+    let rescanning = false;
+
     const copyMediaFile = (filePath, virtualFilePath) => {
         const relativePath = toPosixPath(path.relative(process.cwd(), filePath));
         const targetPath = `/${toPosixPath(path.relative(pagesRoot, virtualFilePath))}`;
 
+        if( isOptimizable(filePath) ) {
+            queueImage(filePath, targetPath);
+            return;
+        }
+
+        if( rescanning ) {
+            return;
+        }
+
         console.log( `[book] Copying '${relativePath}' to '${targetPath}'` );
+
         eleventyConfig.addPassthroughCopy({
             [relativePath]: targetPath
         });
@@ -150,4 +166,18 @@ export default function pagesPlugin(eleventyConfig, { templateExtensions, mediaE
     // Walk eagerly, since addPassthroughCopy must be registered during config setup,
     // not lazily when 11ty later resolves the "contents" global data.
     eleventyConfig.addGlobalData("contents", walkPagesTree(pagesRoot));
+
+    // Pick up images added or removed since the last build (dev server).
+    let initialBuild = true;
+    eleventyConfig.on("eleventy.before", () => {
+        if( initialBuild ) {
+            initialBuild = false;
+            return;
+        }
+
+        rescanning = true;
+        walkPagesTree(pagesRoot);
+        rescanning = false;
+    });
+    eleventyConfig.addWatchTarget(`${pagesRoot}**/*.{${IMAGE_WATCH_EXTENSIONS}}`);
 }

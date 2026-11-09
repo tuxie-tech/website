@@ -1,0 +1,223 @@
+
+
+{% set stockSubject = ("TuxieTech Stock and Purchase Enquiry: " ~ title) | urlencode %}
+<div class="@container max-w-140 bg-white border border-gray-300 shadow-lg mx-auto rounded-lg p-5">
+    <h3 class="m-0 font-bold text-2xl">Purchase Options</h3>
+    <div class="cart-variant-list mx-auto w-full max-w-4xl" data-cart-variants data-product-id="{{ squareId | escape }}" data-api-base-url="{{ apiBaseUrl | escape }}">
+        <div class="cart-variant-list__status" data-cart-status role="status" aria-live="polite">Loading product options...</div>
+        <div data-variant-rows></div>
+        <div class="px-4 pb-3 text-right text-sm text-gray-700" data-stock-help role="status" aria-live="polite" hidden>
+            Stock or purchase questions? <a href="mailto:j.vidler@lancaster.ac.uk?subject={{ stockSubject }}">Contact us</a>.
+        </div>
+    </div>
+    <div class="text-right px-4"><a href="{{ '/cart/' | url }}">View cart</a></div>
+</div>
+
+<template data-variant-template>
+    <section class="quantity-control-shell grid grid-cols-[minmax(8rem,1fr)_auto_auto] items-center gap-4 border-b border-gray-300 p-4 @max-[30rem]:grid-cols-[minmax(0,1fr)_auto] @max-[30rem]:items-start @max-[30rem]:gap-3 @max-[30rem]:px-0 @max-[30rem]:py-3" data-quantity-control>
+        <h3 class="quantity-variant__name m-0 text-base font-bold @max-[30rem]:col-span-full" data-variant-name></h3>
+        <div class="quantity-control flex flex-col items-center justify-center gap-1 @max-[30rem]:items-start">
+            <button class="quantity-add-button inline-flex h-6 cursor-pointer items-center whitespace-nowrap rounded-full border border-(--gray) bg-(--primary) px-3 text-sm font-bold leading-none text-(--dark) hover:bg-(--accent) focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-(--link) disabled:cursor-not-allowed disabled:opacity-60" type="button" data-add-to-cart>add to cart</button>
+            <div class="quantity-pill inline-flex h-6 items-center overflow-hidden rounded-full border border-(--gray) bg-(--white)" data-quantity-pill role="group" hidden>
+                <button class="quantity-pill__button grid size-6 cursor-pointer place-items-center bg-(--primary) text-2xl leading-none font-bold text-(--dark) hover:enabled:bg-(--accent) disabled:cursor-not-allowed disabled:text-[#666] focus-visible:relative focus-visible:z-1 focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-(--link)" type="button" data-quantity-step="-1"><span class="inline-block -translate-y-0.5 leading-none" aria-hidden="true">-</span></button>
+                <input class="quantity-pill__input h-6 w-16 border-0 bg-transparent p-0 text-center font-bold tabular-nums text-(--text-default) focus-visible:relative focus-visible:z-1 focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-(--link)" type="text" inputmode="numeric" pattern="[0-9]*" value="0">
+                <button class="quantity-pill__button grid size-6 cursor-pointer place-items-center bg-(--primary) text-2xl leading-none font-bold text-(--dark) hover:enabled:bg-(--accent) disabled:cursor-not-allowed disabled:text-[#666] focus-visible:relative focus-visible:z-1 focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-(--link)" type="button" data-quantity-step="1"><span class="inline-block -translate-y-0.5 leading-none" aria-hidden="true">+</span></button>
+            </div>
+        </div>
+        <div class="quantity-pricing m-0 flex flex-col items-end gap-0" aria-live="polite" aria-atomic="true">
+            <div class="m-0 text-2xl font-bold tabular-nums" data-total-display hidden><span class="sr-only">Total cost: </span><span data-total-cost></span></div>
+            <div class="m-0 text-base font-bold tabular-nums text-(--text-default)" data-unit-cost-line><span data-unit-cost></span>/each</div>
+            <div class="text-xs tabular-nums text-gray-600" data-stock-availability hidden></div>
+        </div>
+    </section>
+</template>
+
+<script type="module">
+    import { getQuantity, normalizeQuantity, setQuantity } from "{{ '/assets/js/cart-session.js' | url }}";
+
+    const COST_DEBOUNCE_MS = 500;
+
+    document.querySelectorAll( "[data-cart-variants]" ).forEach( async ( cart ) => {
+        const status = cart.querySelector( "[data-cart-status]" );
+        const rows = cart.querySelector( "[data-variant-rows]" );
+        const template = document.querySelector( "[data-variant-template]" );
+        const apiBaseUrl = cart.dataset.apiBaseUrl.replace( /\/+$/, "" );
+        const itemId = cart.dataset.productId;
+            const stockHelp = cart.querySelector( "[data-stock-help]" );
+            const updateStockHelp = () => {
+                stockHelp.hidden = ![...rows.querySelectorAll( "[data-quantity-control]" )].some(( row ) => {
+                    if ( row.dataset.availableStock === "" ) {
+                        return false;
+                    }
+
+                    const stockLimit = Number( row.dataset.availableStock );
+                    const quantity = Number( row.querySelector( ".quantity-pill__input" ).value );
+                    return stockLimit === 0 || quantity >= stockLimit;
+                } );
+            };
+
+        try {
+            const response = await fetch( `${apiBaseUrl}/catalog/items/${encodeURIComponent( itemId )}` );
+            if ( !response.ok ) {
+                throw new Error( `Catalog API returned ${response.status}` );
+            }
+
+            const payload = await response.json();
+            if ( !Array.isArray( payload.variants ) || payload.variants.length === 0 ) {
+                status.textContent = "No product options are available.";
+                return;
+            }
+
+            const formatCurrency = new Intl.NumberFormat( "en-GB", {
+                style: "currency",
+                currency: "GBP"
+            } );
+            let hasOutOfStockVariants = false;
+            let hasAdjustedQuantity = false;
+
+            payload.variants.forEach(( variant ) => {
+                if ( !variant.id ) {
+                    return;
+                }
+
+                let variantName = payload.productName;
+                if ( payload.variants.length > 1 && variant.name?.trim() !== payload.productName?.trim() ) {
+                    variantName += " " + (variant.name || "Standard");
+                }
+
+                const row = template.content.firstElementChild.cloneNode( true );
+                const unitPrice = Number( variant.unitCost );
+                const hasPrice = variant.unitCost !== null
+                    && variant.unitCost !== undefined
+                    && Number.isFinite( unitPrice )
+                    && unitPrice >= 0;
+                const hasStockLimit = variant.availableStock !== null && variant.availableStock !== undefined;
+                const availableStock = hasStockLimit
+                    ? normalizeQuantity( variant.availableStock, variant.availableStock )
+                    : null;
+                const isOutOfStock = availableStock === 0;
+                const unitPriceMinor = hasPrice ? Math.round( unitPrice * 100 ) : 0;
+                const input = row.querySelector( ".quantity-pill__input" );
+                const addButton = row.querySelector( "[data-add-to-cart]" );
+                const quantityPill = row.querySelector( "[data-quantity-pill]" );
+                const incrementButton = row.querySelector( '[data-quantity-step="1"]' );
+                const unitCost = row.querySelector( "[data-unit-cost]" );
+                const unitCostLine = row.querySelector( "[data-unit-cost-line]" );
+                const totalDisplay = row.querySelector( "[data-total-display]" );
+                const totalCost = row.querySelector( "[data-total-cost]" );
+                const stockAvailability = row.querySelector( "[data-stock-availability]" );
+                let costTimeout;
+
+                row.dataset.variantId = variant.id;
+                row.dataset.productId = itemId;
+                row.dataset.unitCostMinor = String( unitPriceMinor );
+                    row.dataset.availableStock = availableStock === null ? "" : String( availableStock );
+                if ( availableStock !== null ) {
+                    stockAvailability.textContent = `Max: ${availableStock}`;
+                    stockAvailability.hidden = false;
+                }
+                row.querySelector( "[data-variant-name]" ).textContent = variantName;
+                input.id = `quantity-${variant.id}`;
+                input.name = `quantity[${variant.id}]`;
+                input.setAttribute( "aria-label", `${variantName} quantity` );
+                quantityPill.setAttribute( "aria-label", `Choose ${variantName} quantity` );
+                row.querySelector( '[data-quantity-step="-1"]' ).setAttribute( "aria-label", `Decrease ${variantName} quantity` );
+                incrementButton.setAttribute( "aria-label", `Increase ${variantName} quantity` );
+                input.max = availableStock === null ? "" : String( availableStock );
+                addButton.textContent = isOutOfStock ? "No stock available" : "Add to cart";
+                addButton.disabled = !hasPrice || isOutOfStock;
+                input.disabled = !hasPrice || isOutOfStock;
+                unitCost.textContent = hasPrice ? formatCurrency.format( unitPriceMinor / 100 ) : "Unavailable";
+                const savedQuantity = getQuantity( itemId, variant.id );
+                const initialQuantity = normalizeQuantity( savedQuantity, availableStock );
+                input.value = String( initialQuantity );
+                if ( initialQuantity !== savedQuantity ) {
+                    setQuantity( itemId, variant.id, initialQuantity );
+                    hasAdjustedQuantity ||= savedQuantity > initialQuantity;
+                }
+                hasOutOfStockVariants ||= isOutOfStock;
+
+                const updateTotal = ( quantity, immediate = false ) => {
+                    clearTimeout( costTimeout );
+                    const hasQuantity = quantity > 0;
+                    totalDisplay.hidden = !hasQuantity;
+                    unitCostLine.classList.toggle( "text-base", !hasQuantity );
+                    unitCostLine.classList.toggle( "text-(--text-default)", !hasQuantity );
+                    unitCostLine.classList.toggle( "text-sm", hasQuantity );
+                    unitCostLine.classList.toggle( "text-[#555]", hasQuantity );
+
+                    const renderTotal = () => {
+                        totalCost.textContent = formatCurrency.format( unitPriceMinor * quantity / 100 );
+                        totalCost.removeAttribute( "aria-busy" );
+                    };
+
+                    if ( immediate ) {
+                        renderTotal();
+                        return;
+                    }
+
+                    totalCost.setAttribute( "aria-busy", "true" );
+                    costTimeout = setTimeout( renderTotal, COST_DEBOUNCE_MS );
+                };
+
+                const updateQuantity = () => {
+                    const quantity = normalizeQuantity( input.value, availableStock );
+
+                    input.value = String( quantity );
+                    addButton.hidden = quantity > 0;
+                    quantityPill.hidden = quantity === 0;
+                    incrementButton.disabled = !hasPrice || isOutOfStock ||
+                        ( availableStock !== null && quantity >= availableStock );
+                        updateStockHelp();
+
+                    if ( hasPrice ) {
+                        setQuantity( itemId, variant.id, quantity );
+                    }
+
+                    updateTotal( quantity );
+                };
+
+                addButton.hidden = initialQuantity > 0;
+                quantityPill.hidden = initialQuantity === 0;
+                incrementButton.disabled = !hasPrice || isOutOfStock ||
+                    ( availableStock !== null && initialQuantity >= availableStock );
+                updateTotal( Number( input.value ), true );
+
+                addButton.addEventListener( "click", () => {
+                    input.value = "1";
+                    updateQuantity();
+                } );
+
+                row.querySelectorAll( "[data-quantity-step]" ).forEach(( button ) => {
+                    button.addEventListener( "click", () => {
+                        input.value = String( Number( input.value ) + Number( button.dataset.quantityStep ) );
+                        updateQuantity();
+                    } );
+                } );
+
+                input.addEventListener( "input", updateQuantity );
+                input.addEventListener( "change", updateQuantity );
+                rows.append( row );
+                    updateStockHelp();
+            } );
+
+            if ( rows.childElementCount === 0 ) {
+                status.hidden = false;
+                status.textContent = "No product options are available.";
+            } else {
+                const notices = [];
+                if ( hasOutOfStockVariants ) {
+                    notices.push( "Some options are out of stock." );
+                }
+                if ( hasAdjustedQuantity ) {
+                    notices.push( "A saved quantity was reduced to match available stock." );
+                }
+                status.hidden = notices.length === 0;
+                status.textContent = notices.join( " " );
+            }
+        } catch ( error ) {
+            console.error( "Unable to load product options.", error );
+            status.textContent = "Product options could not be loaded.";
+        }
+    } );
+</script>

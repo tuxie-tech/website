@@ -2,13 +2,24 @@ import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { inspect } from 'util'
 import fs from "node:fs"
+import { parse as yamlParse } from "yaml";
+import Shiki from "@shikijs/markdown-it";
 import pagesPlugin from "./eleventy-plugins/pages.js";
+import { isOptimizable, processQueuedImages, queueImage } from "./eleventy-plugins/images.js";
 
 const templateExtensions = [".html", ".xml", ".njk", ".md"];
 const mediaExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif", ".ico", ".pdf", ".mp3", ".mp4", ".webm", ".ogg"];
 
 export default async function(eleventyConfig) {
     eleventyConfig.addPlugin(pagesPlugin, { templateExtensions, mediaExtensions });
+
+    // Code blocks are highlighted at build time, so no highlighter ships to the browser.
+    const highlighter = await Shiki({
+        theme: "github-light",
+        langs: ["c", "cpp", "javascript", "typescript", "python"],
+        fallbackLanguage: "text",
+    });
+    eleventyConfig.amendLibrary("md", (md) => md.use(highlighter));
 
     // Add a filter to handle URL prefixes correctly
     eleventyConfig.addFilter("url", (path) => {
@@ -20,8 +31,8 @@ export default async function(eleventyConfig) {
         return prefix + normalizedPath;
     });
 
-    eleventyConfig.addFilter("safedump", (obj) => {
-        return inspect(obj, { depth: null, colors: false });
+    eleventyConfig.addFilter("safedump", (obj, depth = null) => {
+        return inspect(obj, { depth, colors: false });
     });
 
     eleventyConfig.addCollection("pages", (collectionsApi) => {
@@ -86,7 +97,27 @@ export default async function(eleventyConfig) {
         });
     });
 
-    eleventyConfig.addPassthroughCopy("src/assets/img");
+    eleventyConfig.addPassthroughCopy("src/assets/js");
+
+    // Static images are optimised into the output once the build finishes.
+    const queueImageDir = (dir, target, register) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const entryPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                queueImageDir(entryPath, `${target}/${entry.name}`, register);
+            } else if (isOptimizable(entry.name)) {
+                queueImage(entryPath, `${target}/${entry.name}`);
+            } else if (register) {
+                eleventyConfig.addPassthroughCopy({ [entryPath]: `${target}/${entry.name}` });
+            }
+        }
+    };
+    queueImageDir("src/assets/img", "assets/img", true);
+
+    // Rescan on rebuilds so added images are picked up by the dev server.
+    eleventyConfig.on("eleventy.before", () => queueImageDir("src/assets/img", "assets/img", false));
+    eleventyConfig.addWatchTarget("src/assets/img/");
+    eleventyConfig.on("eleventy.after", ({ directories, dir }) => processQueuedImages(directories?.output ?? dir.output));
 
 
     const pagesRoot = path.join(process.cwd(), "src/_pages");
@@ -147,7 +178,99 @@ export default async function(eleventyConfig) {
         // Missing or malformed .gitmodules should not break builds.
     }
 
+    // Pages inherit front matter from the index pages of their ancestor directories.
+    const pagesDir = path.resolve("src/_pages");
+    const NOT_INHERITED = new Set(["layout", "title", "permalink", "plugins", "eleventyComputed"]);
+    const INDEX_FILES = ["index.md", "index.njk", "index.html"];
+    const metaCache = new Map();
+
+    const readFileMeta = (file) => {
+        if (metaCache.has(file)) {
+            return metaCache.get(file);
+        }
+
+        let meta = {};
+        const frontMatter = fs.readFileSync(file, "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---/);
+        if (frontMatter) {
+            meta = yamlParse(frontMatter[1]) || {};
+        }
+
+        metaCache.set(file, meta);
+        return meta;
+    };
+
+    const readIndexMeta = (dir) => {
+        const file = INDEX_FILES.map((name) => path.join(dir, name)).find((candidate) => fs.existsSync(candidate));
+        return file ? readFileMeta(file) : {};
+    };
+
+    const collectIndexKeys = (dir, keys) => {
+        for (const key of Object.keys(readIndexMeta(dir))) {
+            if (!NOT_INHERITED.has(key)) {
+                keys.add(key);
+            }
+        }
+
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
+                collectIndexKeys(path.join(dir, entry.name), keys);
+            }
+        }
+    };
+
+    // Ancestor index metadata, nearest first. A directory's own index starts at its parent.
+    const getAncestorMeta = (data) => {
+        const inputPath = path.resolve(data.page?.inputPath || "");
+        let dir = path.dirname(inputPath);
+        if (INDEX_FILES.includes(path.basename(inputPath))) {
+            dir = path.dirname(dir);
+        }
+
+        const chain = [];
+        while (dir.startsWith(pagesDir + path.sep)) {
+            chain.push({ dir, meta: readIndexMeta(dir) });
+            dir = path.dirname(dir);
+        }
+        return chain;
+    };
+
+    const inheritedKeys = new Set();
+    if (fs.existsSync(pagesDir)) {
+        collectIndexKeys(pagesDir, inheritedKeys);
+    }
+
+    const inheritedData = {};
+    for (const key of inheritedKeys) {
+        inheritedData[key] = (data) => {
+            // A computed key can't read its own value, so use the page's front matter.
+            const own = readFileMeta(path.resolve(data.page.inputPath))[key];
+            const chain = getAncestorMeta(data).filter(({ meta }) => meta[key] !== undefined);
+
+            if (key === "tags") {
+                const all = [...chain.reverse().map(({ meta }) => meta.tags), own];
+                return [...new Set(all.flat().filter(Boolean))];
+            }
+
+            if (own !== undefined || !chain.length) {
+                return own;
+            }
+
+            const { dir, meta } = chain[0];
+            if (key !== "hero") {
+                return meta[key];
+            }
+
+            // Pages render as /name/, so relative image paths need one "../" per level below the owning index.
+            const depth = path.relative(dir, path.resolve(data.page.inputPath)).split(path.sep).length;
+            const prefix = "../".repeat(depth);
+            const rebase = (src) => /^(\/|[a-z]+:)/i.test(src) ? src : prefix + src;
+            return Array.isArray(meta.hero) ? meta.hero.map(rebase) : rebase(meta.hero);
+        };
+    }
+
     eleventyConfig.addGlobalData("eleventyComputed", {
+        ...inheritedData,
+        apiBaseUrl: () => process.env.API_BASE_URL || "https://api.tuxie.tech",
         isMakecode: (data) => {
             const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
             const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);

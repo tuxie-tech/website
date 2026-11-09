@@ -12,8 +12,11 @@
 
             {%- if info or hero -%}
             <div class="xl:w-3/12 xl:block hidden p-5 mx-auto container">
+                {%- if squareId -%}
+                <div class="pt-35 mb-7" data-purchase-side></div>
+                {%- endif -%}
                 {%- if hero -%}
-                    <div class="mx-auto pt-35 flex flex-col gap-7">
+                    <div class="mx-auto {{ '' if squareId else 'pt-35' }} flex flex-col gap-7">
                         {%- if hero is iterable and hero is not string -%}
                             {%- for h in hero -%}
                                 <img src="{{ h }}" class="w-4/5 shadow-alpha" loading="lazy" />
@@ -46,6 +49,33 @@
             <div class="{{ 'xl:w-10/12' if info or hero }} container mx-auto bg-white xl:mr-0 p-3 shadow-2xl">
                 {%- include "partials/breadcrumb.njk" -%}
 
+                {%- if squareId -%}
+                <div data-purchase>
+                {%- include "partials/cart.njk" -%}
+                </div>
+                <script>
+                    // Move the single purchase box into the left column whenever that column is visible.
+                    {
+                        const purchase = document.querySelector( "[data-purchase]" );
+                        const side = document.querySelector( "[data-purchase-side]" );
+                        const anchor = document.currentScript;
+                        const wide = window.matchMedia( "(min-width: 80rem)" );
+                        const place = () => {
+                            if ( side && wide.matches ) {
+                                side.append( purchase );
+                                return;
+                            }
+
+                            anchor.before( purchase );
+                        };
+                        place();
+                        wide.addEventListener( "change", place );
+                    }
+                </script>
+                {%- set ref = " (" ~ mfn ~ ")" if mfn else "" -%}
+                {%- set subject = ("TuxieTech Product Enquiry: " ~ title ~ ref) | urlencode -%}
+                {%- endif -%}
+
                 {%- if gitUrl and isMakecode -%}
                 <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
                     <p>To use our extension for this module in <a href="https://makecode.microbit.org/" target="_blank">Makecode</a>, enter this URL in the extensions manager:</p>
@@ -55,18 +85,6 @@
                 {%- if gitUrl -%}
                 <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
                     <p>You can help improve this documentation! We accept contributions via <a href="{{ gitUrl }}" target="_blank">Github</a></p>
-                </div>
-                {%- endif -%}
-
-                {%- set ref = " (" ~ mfn ~ ")" if mfn else "" -%}
-                {%- set subject = ("TuxieTech Product Enquiry: " ~ title ~ ref) | urlencode -%}
-                {%- if canPurchase -%}
-                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
-                    <p>For availability and pricing information, please contact <a href="mailto:j.vidler@lancaster.ac.uk?subject={{ subject }}" target="_blank">John via email</a>.</p>
-                </div>
-                {% else %}
-                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
-                    <p>This product is not currently available for purchase. For further information, please contact <a href="mailto:j.vidler@lancaster.ac.uk?subject={{ subject }}" target="_blank">John via email</a>.</p>
                 </div>
                 {%- endif -%}
 

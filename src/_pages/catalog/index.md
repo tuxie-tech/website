@@ -9,26 +9,46 @@ tags:
     We're still working on consolidating our catalog, so things look a little sparse around here right now. If there's something we haven't got to yet, that you would be interested in, please <a href="mailto:j.vidler@lancaster.ac.uk?subject=TuxieTech%20Enquiries">contact John at via email</a>
 </x-box>
 
+{% from "components/catalog-tile.njk" import render as catalogTile %}
+
+## Our Hardware
+
 <div class="flex flex-wrap gap-5 justify-center items-stretch mx-auto w-full px-5">
-{%- for entry in collections.hardwareIndex %}
-    {%- if entry.url %}
-        {%- set hero = entry.data.hero[0] if entry.data.hero is not string else entry.data.hero -%}
-        {%- set secondaryHero = entry.data.hero[1] if entry.data.hero is not string and entry.data.hero.length > 1 else '' -%}
-        {%- set info = entry.data.info -%}
-        {%- if hero and info -%}
-        <a href="{{ entry.url }}" class="noline group block w-full max-w-80">
-            <x-tile>
-                <div class="relative w-full">
-                    <img src="{{ entry.url + hero }}" class="mb-2 p-5" loading="lazy" />
-                    {%- if secondaryHero -%}
-                    <img src="{{ entry.url + secondaryHero }}" class="absolute inset-0 mb-2 p-5 bg-[var(--light)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" loading="lazy" />
-                    {%- endif -%}
-                </div>
-                <h3 class="text-xl font-semibold mb-2 text-center">{{ entry.data.title }}</h3>
-                <p class="text-center">{{ entry.data.info }}</p>
-            </x-tile>
-        </a>
-        {%- endif -%}
-    {%- endif %}
+{%- for entry in collections.hardwareIndex -%}
+    {{ catalogTile(entry) }}
 {%- endfor %}
 </div>
+
+## Our Software
+
+<div class="flex flex-wrap gap-5 justify-center items-stretch mx-auto w-full px-5">
+{%- for entry in collections.softwareIndex -%}
+    {{ catalogTile(entry) }}
+{%- endfor %}
+</div>
+
+<script type="module">
+    const apiBaseUrl = "{{ apiBaseUrl | escape }}".replace( /\/+$/, "" );
+    const formatCurrency = new Intl.NumberFormat( "en-GB", { style: "currency", currency: "GBP" } );
+    const tiles = [...document.querySelectorAll( "[data-tile-price]" )];
+    const ids = [...new Set( tiles.map( tile => tile.dataset.tilePrice ) )];
+    if ( ids.length > 0 ) {
+        try {
+            const response = await fetch( `${apiBaseUrl}/catalog/prices?ids=${ids.map( encodeURIComponent ).join( "," )}` );
+            if ( !response.ok ) {
+                throw new Error( `Catalog API returned ${response.status}` );
+            }
+            const { prices } = await response.json();
+            tiles.forEach( tile => {
+                const price = prices[tile.dataset.tilePrice];
+                if ( !price ) {
+                    return;
+                }
+                tile.textContent = `From ${formatCurrency.format( price.min )}`;
+                tile.hidden = false;
+            } );
+        } catch ( error ) {
+            console.error( "Unable to load prices", error );
+        }
+    }
+</script>
