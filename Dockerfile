@@ -1,5 +1,8 @@
 FROM node:current AS build
 
+ARG FEATURE_SQUARE_SALES
+ARG FEATURE_SALES_EMAIL
+
 WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci
