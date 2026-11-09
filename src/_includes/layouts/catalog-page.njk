@@ -74,27 +74,28 @@
                 </script>
                 {%- endif -%}
 
-                {%- if features.salesEmail and squareId -%}
-                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
-                    <p>For availability and sales enquiries, <a href="mailto:j.vidler@lancaster.ac.uk?subject={{ enquirySubject | urlencode }}">contact John</a>.</p>
-                </div>
-                {%- endif -%}
-
-                {%- if gitUrl and isMakecode -%}
-                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
-                    <p>To use our extension for this module in <a href="https://makecode.microbit.org/" target="_blank">Makecode</a>, enter this URL in the extensions manager:</p>
-                    <p><a href="{{ gitUrl }}" target="_blank">{{ gitUrl }}</a></p>
-                </div>
-                {%- endif -%}
-                {%- if gitUrl -%}
-                <div class="mx-auto max-w-96rem px-5 text-center bg-orange-100 font-bold">
-                    <p>You can help improve this documentation! We accept contributions via <a href="{{ gitUrl }}" target="_blank">Github</a></p>
-                </div>
-                {%- endif -%}
-
-                <div class="mx-auto max-w-96rem p-5 prose">
+                <div class="mx-auto max-w-96rem p-5 prose catalog-prose">
                     {%- if title -%}
                         <h1>{{ title }}</h1>
+                    {%- endif -%}
+                    {%- set showSales = features.salesEmail and squareId -%}
+                    {%- if gitUrl or showSales -%}
+                    <aside class="catalog-notice" aria-label="About this page">
+                        {%- if gitUrl and isMakecode -%}
+                        <div class="catalog-notice__main">
+                            <span>Use this extension in <a href="https://makecode.microbit.org/" target="_blank" rel="noopener">MakeCode</a>: open <strong>Extensions</strong> and paste</span>
+                            <span class="copy-inline"><code>{{ gitUrl }}</code><button type="button" class="copy-button" title="Copy to clipboard" aria-label="Copy code to clipboard"></button></span>
+                        </div>
+                        {%- endif -%}
+                        <ul class="catalog-notice__links">
+                            {%- if showSales -%}
+                            <li><a href="mailto:j.vidler@lancaster.ac.uk?subject={{ enquirySubject | urlencode }}">Availability and sales enquiries</a></li>
+                            {%- endif -%}
+                            {%- if gitUrl -%}
+                            <li><a href="{{ gitUrl }}" target="_blank" rel="noopener">Improve this documentation on GitHub</a></li>
+                            {%- endif -%}
+                        </ul>
+                    </aside>
                     {%- endif -%}
                     {{ content | safe }}
                 </div>

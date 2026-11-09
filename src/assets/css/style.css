@@ -99,8 +99,379 @@ img {
     border-radius: 0.5rem;
 }
 
-.prose > p > img {
-    max-width: 60%;
+.prose p img {
+    max-width: min(100%, 400px);
+}
+
+/* Block renders share one pixel scale, so scale them all by the same factor
+   (rather than capping each to a max width, which shrinks the wide ones more). */
+.prose td img {
+    max-width: none;
+    zoom: 0.45;
+}
+
+/* Code view: show only the language the reader chose (see eleventy-plugins/code-view.js). */
+html:not([data-view="typescript"]) [data-view-only="typescript"],
+html[data-view="typescript"] [data-view-only="blocks"] {
+    display: none;
+}
+
+/* Views in a group share one grid cell, so the layout doesn't move when the reader switches:
+   the hidden view keeps its space but is invisible and out of the accessibility tree. */
+.view-group {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    min-width: 0;
+}
+
+.view-group > [data-view-only] {
+    grid-area: 1 / 1;
+    min-width: 0;
+    max-width: 100%;
+}
+
+html:not([data-view="typescript"]) .view-group > [data-view-only="typescript"],
+html[data-view="typescript"] .view-group > [data-view-only="blocks"] {
+    display: block;
+    visibility: hidden;
+}
+
+.view-group pre {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow-x: auto;
+}
+
+/* Highlighted inline code keeps the page background rather than the fence's own. */
+.shiki-inline {
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+}
+
+.view-group x-photo {
+    max-width: 22rem;
+}
+
+.view-switch {
+    position: sticky;
+    top: 0.5rem;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: fit-content;
+    max-width: 100%;
+    margin: 1rem auto;
+    padding: 0.35rem 0.5rem 0.35rem 1rem;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+}
+
+/* Toggle button group: exactly one option is pressed at a time. */
+.segmented {
+    display: inline-flex;
+}
+
+.segmented button {
+    padding: 0.3rem 1rem;
+    border: 1px solid var(--secondary);
+    background: #fff;
+    color: var(--secondary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.segmented button + button {
+    margin-left: -1px;
+}
+
+.segmented button:first-child {
+    border-radius: 999px 0 0 999px;
+}
+
+.segmented button:last-child {
+    border-radius: 0 999px 999px 0;
+}
+
+.segmented button[aria-pressed="true"] {
+    background: var(--secondary);
+    color: #fff;
+}
+
+.segmented button:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+    position: relative;
+}
+
+/* Copy-to-clipboard buttons (markup from eleventy-plugins/copy-button.js, behaviour from
+   assets/js/copy-code.js). Hidden until the script has loaded, since they do nothing without it. */
+.copy-block {
+    position: relative;
+    max-width: 100%;
+}
+
+.copy-block pre {
+    padding-right: 3rem;
+}
+
+.copy-inline {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.copy-button {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 0.375rem;
+    background: #fff;
+    color: #555;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.can-copy .copy-button {
+    display: inline-flex;
+}
+
+.copy-button::before {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    background: currentColor;
+    -webkit-mask: var(--copy-icon) center / contain no-repeat;
+    mask: var(--copy-icon) center / contain no-repeat;
+    --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='11' height='11' rx='2'/%3E%3Cpath d='M5 15V6a2 2 0 0 1 2-2h9'/%3E%3C/svg%3E");
+}
+
+.copy-button[data-state="done"]::before {
+    --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+}
+
+.copy-button[data-state="failed"]::before {
+    --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+}
+
+.copy-block > .copy-button {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+}
+
+.copy-button:hover,
+.copy-button:focus-visible,
+.copy-button[data-state] {
+    opacity: 1;
+}
+
+.copy-button:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+}
+
+/* Success is a solid, bold state with a small pop, so it can't be missed. */
+.copy-button[data-state="done"] {
+    background: #1b7f3b;
+    border-color: #1b7f3b;
+    color: #fff;
+    animation: copy-pop 0.35s ease-out;
+}
+
+.copy-button[data-state="failed"] {
+    background: #b3261e;
+    border-color: #b3261e;
+    color: #fff;
+}
+
+@keyframes copy-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
+
+/* Toast above the button: "Copied" / "Copy failed". */
+.copy-toast {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.4rem);
+    z-index: 20;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.375rem;
+    background: #1b7f3b;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(0.25rem);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.copy-toast[data-failed="true"] {
+    background: #b3261e;
+}
+
+.copy-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Little arrow pointing at the button */
+.copy-toast::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0.6rem;
+    border: 0.3rem solid transparent;
+    border-top-color: #1b7f3b;
+}
+
+.copy-toast[data-failed="true"]::after {
+    border-top-color: #b3261e;
+}
+
+.copy-block > .copy-toast {
+    right: 0.4rem;
+    bottom: auto;
+    top: -1.2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .copy-button[data-state="done"] { animation: none; }
+    .copy-toast { transition: none; transform: none; }
+}
+
+/* Catalog documentation pages */
+.catalog-prose h1 { font-size: 3rem; line-height: 1.15; }
+.catalog-prose h2 { font-size: 1.9rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid #e5e5e5; }
+.catalog-prose h3 { font-size: 1.25rem; }
+
+.catalog-notice {
+    margin: 1.25rem auto;
+    padding: 0.375rem 0.5rem;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-left: 4px solid var(--secondary);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.catalog-notice__main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+}
+
+.catalog-notice code {
+    padding: 0.15rem 0.5rem;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    user-select: all;
+    word-break: break-all;
+}
+
+/* Doubled class beats the generic `.prose ul` bullets and indent. */
+.catalog-notice .catalog-notice__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.catalog-notice .catalog-notice__links li {
+    margin: 0;
+}
+
+/* Bar between items; it's decorative, so it's generated content rather than markup. */
+.catalog-notice .catalog-notice__links li + li::before {
+    content: "|";
+    margin: 0 0.75rem;
+    color: #999;
+}
+
+.catalog-notice__main + .catalog-notice__links {
+    margin-top: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid #eee;
+}
+
+/* A worked example: description on the left, demo on the right, stacked on narrow screens. */
+x-example {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem 2rem;
+    align-items: center;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.75rem;
+}
+
+@media (min-width: 48rem) {
+    x-example {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    }
+}
+
+x-example > :first-child > :first-child { margin-top: 0; }
+x-example > :first-child > :last-child { margin-bottom: 0; }
+
+/* Reference tables: a fixed-width first column keeps the layout steady when the view changes. */
+.catalog-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.catalog-prose th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid #ccc;
+}
+
+.catalog-prose td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+    vertical-align: middle;
+}
+
+@media (min-width: 48rem) {
+    .catalog-prose th:first-child,
+    .catalog-prose td:first-child {
+        width: 26rem;
+    }
+}
+
+.catalog-prose tr:has([data-view-only]) td {
+    height: 9rem; /* the taller (blocks) view sets the row height, so switching doesn't shift the page */
+}
+
+.catalog-prose td img {
+    margin: 0;
 }
 
 header {
@@ -296,6 +667,7 @@ x-grid {
 x-shelf {
     display:flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: stretch;
     justify-content: center;
     gap: 0.5rem;
@@ -305,6 +677,10 @@ x-card {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+x-card.left {
+    align-items: flex-start;
 }
 
 x-photo {

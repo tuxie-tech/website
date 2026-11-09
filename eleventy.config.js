@@ -5,6 +5,8 @@ import fs from "node:fs"
 import { parse as yamlParse } from "yaml";
 import Shiki from "@shikijs/markdown-it";
 import pagesPlugin from "./eleventy-plugins/pages.js";
+import codeViewPlugin from "./eleventy-plugins/code-view.js";
+import copyButtonPlugin from "./eleventy-plugins/copy-button.js";
 import { isOptimizable, processQueuedImages, queueImage } from "./eleventy-plugins/images.js";
 
 const templateExtensions = [".html", ".xml", ".njk", ".md"];
@@ -40,6 +42,12 @@ export default async function(eleventyConfig) {
         fallbackLanguage: "text",
     });
     eleventyConfig.amendLibrary("md", (md) => md.use(highlighter));
+
+    // `::: blocks` / `::: typescript` containers, with a reader-chosen language for the whole page.
+    eleventyConfig.addPlugin(codeViewPlugin);
+
+    // Copy-to-clipboard button on every code block (see src/assets/js/copy-code.js).
+    eleventyConfig.addPlugin(copyButtonPlugin);
 
     // Add a filter to handle URL prefixes correctly
     eleventyConfig.addFilter("url", (path) => {
