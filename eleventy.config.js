@@ -10,7 +10,27 @@ import { isOptimizable, processQueuedImages, queueImage } from "./eleventy-plugi
 const templateExtensions = [".html", ".xml", ".njk", ".md"];
 const mediaExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif", ".ico", ".pdf", ".mp3", ".mp4", ".webm", ".ogg"];
 
+// FEATURE_* environment flags toggle site features. Each takes a boolean ("true"/"false", "1"/"0", "on"/"off")
+// and falls back to the default given here when unset.
+const featureFlag = (name, defaultValue) => {
+    const value = process.env[name]?.trim().toLowerCase();
+    if (!value) {
+        return defaultValue;
+    }
+    return !["false", "0", "off", "no"].includes(value);
+};
+
+const features = {
+    // Purchase sections on catalog pages, and the view cart page.
+    squareSales: featureFlag("FEATURE_SQUARE_SALES", true),
+    // Notice at the top of catalog pages linking to an availability and sales enquiry email.
+    salesEmail: featureFlag("FEATURE_SALES_EMAIL", true),
+};
+
 export default async function(eleventyConfig) {
+    eleventyConfig.addGlobalData("features", features);
+    console.log(`[book] Features: ${Object.entries(features).map(([key, on]) => `${key}=${on}`).join(", ")}`);
+
     eleventyConfig.addPlugin(pagesPlugin, { templateExtensions, mediaExtensions });
 
     // Code blocks are highlighted at build time, so no highlighter ships to the browser.
@@ -270,6 +290,12 @@ export default async function(eleventyConfig) {
 
     eleventyConfig.addGlobalData("eleventyComputed", {
         ...inheritedData,
+        // "TuxieTech enquiry about <title> (<hwidx id>)", with the id taken from the first `mfn` entry if present.
+        enquirySubject: (data) => {
+            const mfn = [data.mfn].flat().find((value) => typeof value === "string" && value.trim());
+            const id = mfn?.trim().replace(/\/+$/, "");
+            return `TuxieTech enquiry about ${data.title}${id ? ` (${id})` : ""}`;
+        },
         apiBaseUrl: () => process.env.API_BASE_URL || "https://api.tuxie.tech",
         isMakecode: (data) => {
             const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
@@ -287,6 +313,10 @@ export default async function(eleventyConfig) {
         },
         permalink: (data) => {
             const inputPath = data.page?.inputPath || "";
+            if (!features.squareSales && inputPath.endsWith("/src/_pages/cart.md")) {
+                return false;
+            }
+
             if (!inputPath.endsWith(".md") || !inputPath.includes("/_pages/")) {
                 return;
             }

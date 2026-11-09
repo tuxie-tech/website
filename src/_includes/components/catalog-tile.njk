@@ -15,7 +15,7 @@
                 <span class="ribbon">Makecode</span>
                 {%- endif -%}
                 <h3 class="text-xl font-semibold mb-2 text-center">{{ entry.data.title }}</h3>
-                {%- if entry.data.squareId -%}
+                {%- if entry.data.squareId and features.squareSales -%}
                 <div class="text-center font-semibold text-xl text-pricing my-1" data-tile-price="{{ entry.data.squareId | escape }}" hidden></div>
                 {%- endif -%}
                 <p class="text-center">{{ entry.data.info }}</p>
