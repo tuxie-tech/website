@@ -6,7 +6,7 @@ tags:
 ---
 
 <x-box>
-    We're still working on consolidating our catalog, so things look a little sparse around here right now. If there's something we haven't got to yet, that you would be interested in, please <a href="mailto:j.vidler@lancaster.ac.uk?subject=TuxieTech%20Enquiries">contact John at via email</a>
+    We're still working on consolidating our catalog, so things look a little sparse around here right now. If there's something we haven't got to yet, that you would be interested in, please <a href="mailto:john@tuxie.tech?subject=TuxieTech%20Enquiries">contact John at via email</a>
 </x-box>
 
 {% from "components/catalog-tile.njk" import render as catalogTile %}

@@ -5,7 +5,7 @@ title: Home
 
 # Hi! We're still getting started!
 
-We plan to have more here soon, until then if you need to contact us, including for any supply or purchase queries, please email [j.vidler@lancaster.ac.uk](mailto:j.vidler@lancaster.ac.uk)
+We plan to have more here soon, until then if you need to contact us, including for any supply or purchase queries, please email [john@tuxie.tech](mailto:john@tuxie.tech)
 
 <x-grid>
     <x-card>

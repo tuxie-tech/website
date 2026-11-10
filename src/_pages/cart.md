@@ -11,7 +11,7 @@ tags:
 <section class="shopping-cart" data-shopping-cart data-api-base-url="{{ apiBaseUrl | escape }}">
     <p class="shopping-cart__status" data-cart-status role="status" aria-live="polite">Loading your cart...</p>
     <div class="shopping-cart__stock-help" data-stock-help role="status" aria-live="polite" hidden>
-        Some items are sold out or at their stock limit. For stock or purchase questions, <a href="mailto:j.vidler@lancaster.ac.uk?subject=TuxieTech%20Cart%20Stock%20Enquiry">contact us</a>.
+        Some items are sold out or at their stock limit. For stock or purchase questions, <a href="mailto:john@tuxie.tech?subject=TuxieTech%20Cart%20Stock%20Enquiry">contact us</a>.
     </div>
     <div class="shopping-cart__content" data-cart-content hidden>
         <div class="shopping-cart__table-wrap">
