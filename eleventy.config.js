@@ -76,6 +76,14 @@ export default async function(eleventyConfig) {
             .filter((item) => !item.inputPath.endsWith("/src/_pages/catalog/index.md"));
     });
 
+    // One entry per guide: the landing page of each folder (or submodule doc/ folder) directly under guides/.
+    eleventyConfig.addCollection("guides", (collectionsApi) => {
+        return collectionsApi
+            .getAll()
+            .filter((item) => /^\/guides\/[^/]+\/$/.test(item.url || ""))
+            .sort((a, b) => a.data.title.localeCompare(b.data.title));
+    });
+
     eleventyConfig.addCollection("catalogIndex", (collectionsApi) => {
         const seen = new Set();
         const combined = [
@@ -149,29 +157,29 @@ export default async function(eleventyConfig) {
 
 
     const pagesRoot = path.join(process.cwd(), "src/_pages");
-    const catalogRoot = path.join(pagesRoot, "catalog");
-    const catalogSubmodules = new Set();
-    const catalogSubmoduleUrls = new Map();
+    // Sections whose entries may be plain folders in this repo, or git submodules with a doc/ folder.
+    // A submodule's doc/ folder becomes the entry's output root, e.g. src/_pages/guides/foo/doc/ -> /guides/foo/.
+    const SUBMODULE_SECTIONS = ["catalog", "guides"];
+    // Keyed by "<section>/<module>", e.g. "catalog/pxt-rib-bit".
+    const sectionSubmodules = new Set();
+    const sectionSubmoduleUrls = new Map();
 
     const toPosixPath = (value) => value.replaceAll(path.sep, "/");
-    const hasCatalogModuleFile = (moduleName, fileName) => {
-        return fs.existsSync(path.join(catalogRoot, moduleName, fileName));
+    const hasModuleFile = (moduleKey, fileName) => {
+        return fs.existsSync(path.join(pagesRoot, moduleKey, fileName));
     };
 
-    try {
-        const catalogEntries = await readdir(catalogRoot, { withFileTypes: true });
-        for (const entry of catalogEntries) {
-            if (!entry.isDirectory()) {
-                continue;
+    for (const section of SUBMODULE_SECTIONS) {
+        try {
+            const entries = await readdir(path.join(pagesRoot, section), { withFileTypes: true });
+            for (const entry of entries) {
+                if (entry.isDirectory() && fs.existsSync(path.join(pagesRoot, section, entry.name, ".git"))) {
+                    sectionSubmodules.add(`${section}/${entry.name}`);
+                }
             }
-
-            const modulePath = path.join(catalogRoot, entry.name);
-            if (fs.existsSync(path.join(modulePath, ".git"))) {
-                catalogSubmodules.add(entry.name);
-            }
+        } catch {
+            // Section directories are optional in some environments.
         }
-    } catch {
-        // Catalog directory is optional in some environments.
     }
 
     try {
@@ -189,22 +197,37 @@ export default async function(eleventyConfig) {
                 }
 
                 const modulePath = pathMatch[1].trim().replaceAll("\\", "/");
-                const url = urlMatch[1].trim();
-                const catalogPathMatch = modulePath.match(/^src\/_pages\/catalog\/([^/]+)$/);
-
-                if (!catalogPathMatch) {
-                    continue;
-                }
-
-                const moduleName = catalogPathMatch[1];
-                if (catalogSubmodules.has(moduleName)) {
-                    catalogSubmoduleUrls.set(moduleName, url);
+                const moduleKey = modulePath.match(/^src\/_pages\/([^/]+\/[^/]+)$/)?.[1];
+                if (moduleKey && sectionSubmodules.has(moduleKey)) {
+                    sectionSubmoduleUrls.set(moduleKey, urlMatch[1].trim());
                 }
             }
         }
     } catch {
         // Missing or malformed .gitmodules should not break builds.
     }
+
+    // Guides must each be a folder with an index page, so their relative links and images resolve inside it.
+    try {
+        for (const entry of fs.readdirSync(path.join(pagesRoot, "guides"), { withFileTypes: true })) {
+            if (entry.isFile() && templateExtensions.includes(path.extname(entry.name)) && !entry.name.startsWith("index.")) {
+                console.warn(`[book] Guide 'guides/${entry.name}' should be a folder: move it to 'guides/${path.parse(entry.name).name}/index${path.extname(entry.name)}'.`);
+            }
+        }
+    } catch {
+        // No guides directory.
+    }
+
+    // Matches a page inside a section submodule's doc/ folder: { moduleKey, sectionName, moduleName, stemWithinDoc }.
+    const sectionDocPattern = new RegExp(`^/_pages/((${SUBMODULE_SECTIONS.join("|")})/([^/]+))/doc(?:/(.*))?$`);
+    const matchSubmoduleDoc = (data) => {
+        const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
+        const match = filePathStem.match(sectionDocPattern);
+        if (!match || !sectionSubmodules.has(match[1])) {
+            return null;
+        }
+        return { moduleKey: match[1], sectionName: match[2], moduleName: match[3], stemWithinDoc: match[4] || "index" };
+    };
 
     // Pages inherit front matter from the index pages of their ancestor directories.
     const pagesDir = path.resolve("src/_pages");
@@ -306,17 +329,15 @@ export default async function(eleventyConfig) {
         },
         apiBaseUrl: () => process.env.API_BASE_URL || "https://api.tuxie.tech",
         isMakecode: (data) => {
-            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
-            const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);
-            if (docMatch && hasCatalogModuleFile(docMatch[1], "pxt.json")) {
+            const doc = matchSubmoduleDoc(data);
+            if (doc && hasModuleFile(doc.moduleKey, "pxt.json")) {
                 return true;
             }
         },
         gitUrl: (data) => {
-            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
-            const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);
-            if (docMatch && catalogSubmoduleUrls.has(docMatch[1])) {
-                return catalogSubmoduleUrls.get(docMatch[1]);
+            const doc = matchSubmoduleDoc(data);
+            if (doc && sectionSubmoduleUrls.has(doc.moduleKey)) {
+                return sectionSubmoduleUrls.get(doc.moduleKey);
             }
         },
         permalink: (data) => {
@@ -329,28 +350,26 @@ export default async function(eleventyConfig) {
                 return;
             }
 
-            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
-            const docMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/doc(?:\/(.*))?$/);
-            if (docMatch && catalogSubmodules.has(docMatch[1])) {
-                const moduleName = docMatch[1];
-                const stemWithinDoc = docMatch[2] || "index";
-
-                if (stemWithinDoc === "index") {
-                    return `/catalog/${moduleName}/`;
+            const doc = matchSubmoduleDoc(data);
+            if (doc) {
+                const base = `/${doc.sectionName}/${doc.moduleName}/`;
+                if (doc.stemWithinDoc === "index") {
+                    return base;
                 }
 
-                if (stemWithinDoc.endsWith("/index")) {
-                    const folderStem = stemWithinDoc.slice(0, -"/index".length);
-                    return `/catalog/${moduleName}/${folderStem}/`;
+                if (doc.stemWithinDoc.endsWith("/index")) {
+                    return `${base}${doc.stemWithinDoc.slice(0, -"/index".length)}/`;
                 }
 
-                return `/catalog/${moduleName}/${stemWithinDoc}/`;
+                return `${base}${doc.stemWithinDoc}/`;
             }
 
-            const submoduleMatch = filePathStem.match(/^\/_pages\/catalog\/([^/]+)\/(.*)$/);
+            // Anything in a section submodule outside its doc/ folder (README, sources...) is not published.
+            const filePathStem = (data.page?.filePathStem || "").replaceAll("\\", "/");
+            const submoduleMatch = filePathStem.match(/^\/_pages\/([^/]+\/[^/]+)\/(.*)$/);
             if (
                 submoduleMatch
-                && catalogSubmodules.has(submoduleMatch[1])
+                && sectionSubmodules.has(submoduleMatch[1])
                 && !submoduleMatch[2].startsWith("doc/")
             ) {
                 return false;

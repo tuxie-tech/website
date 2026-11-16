@@ -103,6 +103,26 @@ img {
     max-width: min(100%, 400px);
 }
 
+/* Annotated screenshots in guides: wider than inline images, framed so they read as a picture of a screen. */
+figure.screenshot {
+    margin: 1.25rem auto 2rem;
+    max-width: 800px;
+}
+
+figure.screenshot img {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+figure.screenshot figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+    color: var(--text-light);
+}
+
 /* Block renders share one pixel scale, so scale them all by the same factor
    (rather than capping each to a max width, which shrinks the wide ones more). */
 .prose td img {
@@ -383,7 +403,8 @@ html[data-view="typescript"] .view-group > [data-view-only="blocks"] {
     gap: 0.25rem 0.75rem;
 }
 
-.catalog-notice code {
+.catalog-notice code,
+.copy-inline code {
     padding: 0.15rem 0.5rem;
     background: #fff;
     border: 1px solid #ddd;

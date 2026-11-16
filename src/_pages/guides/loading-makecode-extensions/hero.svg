@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Pasting a GitHub address into an extensions search box adds a new block">
+  <rect width="400" height="300" rx="16" fill="#F2F2F2"/>
+
+  <!-- Search box with a pasted GitHub address -->
+  <rect x="30" y="40" width="340" height="52" rx="26" fill="#ffffff" stroke="#BDBDBD" stroke-width="2"/>
+  <circle cx="62" cy="64" r="9" fill="none" stroke="#333333" stroke-width="3"/>
+  <line x1="68.5" y1="70.5" x2="76" y2="78" stroke="#333333" stroke-width="3" stroke-linecap="round"/>
+  <text x="90" y="72" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="17" fill="#333333">github.com/tuxie-tech/…</text>
+  <rect x="320" y="54" width="3" height="22" fill="#0066CC"/>
+
+  <!-- Arrow down -->
+  <path d="M200 108 v40" stroke="#bd6b73" stroke-width="6" stroke-linecap="round"/>
+  <path d="M184 136 l16 18 l16 -18" fill="none" stroke="#bd6b73" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- New block, with a notch and tab like a jigsaw-style code block -->
+  <path d="M80 176 h40 l8 8 h24 l8 -8 h160 a10 10 0 0 1 10 10 v54 a10 10 0 0 1 -10 10 h-160 l-8 8 h-24 l-8 -8 h-40 a10 10 0 0 1 -10 -10 v-54 a10 10 0 0 1 10 -10 z" fill="#FF9A00"/>
+  <circle cx="112" cy="213" r="16" fill="#ffffff"/>
+  <path d="M112 204 v18 M103 213 h18" stroke="#FF9A00" stroke-width="4" stroke-linecap="round"/>
+  <rect x="142" y="203" width="150" height="10" rx="5" fill="#ffffff" opacity="0.9"/>
+  <rect x="142" y="221" width="100" height="10" rx="5" fill="#ffffff" opacity="0.6"/>
+</svg>

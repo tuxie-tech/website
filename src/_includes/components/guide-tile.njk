@@ -1,0 +1,23 @@
+{#
+    Tile for a guide: the landing page of a folder (or submodule doc/ folder) under src/_pages/guides/.
+    `hero` is relative to the guide's own folder, like catalog entries; without one the TuxieTech cat is shown.
+    Add `makecode` to a guide's tags to give its tile the MakeCode ribbon.
+#}
+{% macro render(entry) %}
+    {%- if entry.url -%}
+        {%- set hero = entry.data.hero[0] if entry.data.hero and entry.data.hero is not string else entry.data.hero -%}
+        {%- set heroSrc = (entry.url + hero) | url if hero else "/assets/img/TuxieTechCat.png" | url -%}
+        <a href="{{ entry.url | url }}" class="noline group block w-full max-w-80">
+            <x-tile>
+                <div class="relative w-full">
+                    <img src="{{ heroSrc }}" alt="" class="mb-2 p-5" loading="lazy" />
+                </div>
+                {%- if entry.data.tags and "makecode" in entry.data.tags -%}
+                <span class="ribbon">Makecode</span>
+                {%- endif -%}
+                <h3 class="text-xl font-semibold mb-2 text-center">{{ entry.data.title }}</h3>
+                <p class="text-center">{{ entry.data.info }}</p>
+            </x-tile>
+        </a>
+    {%- endif -%}
+{% endmacro %}

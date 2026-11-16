@@ -11,6 +11,8 @@ tags:
 
 {% from "components/catalog-tile.njk" import render as catalogTile %}
 
+<p class="text-center">Items with a <strong>Makecode</strong> ribbon in the corner can be added to your MakeCode projects. <a href="{{ '/guides/loading-makecode-extensions/' | url }}">Here's how to load them</a>.</p>
+
 ## Our Hardware
 
 <div class="flex flex-wrap gap-5 justify-center items-stretch mx-auto w-full px-5">
