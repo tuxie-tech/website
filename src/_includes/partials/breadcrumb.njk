@@ -17,10 +17,25 @@
 	{%- endif -%}
 {%- endfor -%}
 
+{%- set parentHref = "/" -%}
+{%- set parentLabel = homeLabel -%}
+{%- if pathSegments.length > 1 -%}
+	{%- set parentHref = "/" + pathSegments.slice(0, pathSegments.length - 1).join("/") + "/" -%}
+	{%- set parentLabel = pathSegments[pathSegments.length - 2] | replace("-", " ") | title -%}
+	{%- for candidate in collections.pages -%}
+		{%- if candidate.url == parentHref and candidate.data.title -%}
+			{%- set parentLabel = candidate.data.title -%}
+		{%- endif -%}
+	{%- endfor -%}
+{%- endif -%}
+
 <nav aria-label="Breadcrumb" class="text-sm text-gray-600">
-	<ol class="flex flex-wrap items-center pl-3 py-2">
+	{%- if pathSegments.length > 0 -%}
+	<a href="{{ parentHref | url }}" class="crumb-back noline" aria-label="Back to {{ parentLabel }}">&larr; Back to {{ parentLabel }}</a>
+	{%- endif -%}
+	<ol class="crumbs">
 		{%- if pathSegments.length > 0 -%}
-		<li class="bg-secondary py-1 pr-5 pl-3 rounded-l-lg"><a href="{{ '/' | url }}" class="hover:underline noline text-lg">{{ homeLabel }}</a></li>
+		<li><a href="{{ '/' | url }}" class="hover:underline noline">{{ homeLabel }}</a></li>
 		{%- for segment in pathSegments -%}
 			{%- set crumbHref = "/" + pathSegments.slice(0, loop.index).join("/") + "/" -%}
 			{%- set label = segment | replace("-", " ") | title -%}
@@ -29,17 +44,14 @@
 					{%- set label = candidate.data.title -%}
 				{%- endif -%}
 			{%- endfor -%}
-			<li aria-hidden="true" class="-mx-0.5 h-8 w-1 overflow-visible relative">
-				<span class="absolute left-1/2 top-1/2 bg-white" style="width: 0.5rem; height: 3.0rem; transform: translate(-50%, -50%) rotate(25deg);"></span>
-			</li>
 			{%- if loop.last -%}
-			<li aria-current="page" class="font-semibold text-lg bg-secondary py-1 pl-5 pr-2 rounded-r-lg">{{ label }}</li>
+			<li aria-current="page" class="font-semibold">{{ label }}</li>
 			{%- else -%}
-			<li class="bg-secondary py-1 pl-5 pr-5"><a href="{{ crumbHref | url }}" class="hover:underline noline text-secondary text-lg">{{ label }}</a></li>
+			<li><a href="{{ crumbHref | url }}" class="hover:underline noline text-secondary">{{ label }}</a></li>
 			{%- endif -%}
 		{%- endfor -%}
 		{%- else -%}
-		<li aria-current="page" class="font-semibold text-secondary text-lg bg-secondary py-1 px-2 rounded-lg">{{ homeLabel }}</li>
+		<li aria-current="page" class="font-semibold text-secondary">{{ homeLabel }}</li>
 		{%- endif -%}
 	</ol>
 </nav>

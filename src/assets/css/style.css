@@ -6,6 +6,8 @@
 html {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     line-height: 1.6;
+    /* Don't let the layout shrink below 320px; narrower viewports scroll sideways instead */
+    min-width: 320px;
 }
 
 body {
@@ -193,7 +195,7 @@ html[data-view="typescript"] .view-group > [data-view-only="blocks"] {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 999px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 10px 24px -4px rgba(0, 0, 0, 0.3);
     font-size: 0.9rem;
 }
 
@@ -810,4 +812,68 @@ x-box {
     background-color: var(--success);
     -webkit-filter: drop-shadow(0 0 5px #bbbbbb88);
     filter: drop-shadow(0 0 5px #bbbbbb88);
+}
+/* Breadcrumb: each crumb is its own slanted box, so wrapping on small screens stays tidy */
+.crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.25rem 0;
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+}
+
+.crumbs > li {
+    background-color: var(--secondary);
+    color: #fff;
+    padding: 0.25rem 1.25rem;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    /* slanted right edge; the gap between boxes shows as the white slash */
+    clip-path: polygon(0 0, 100% 0, calc(100% - 0.75rem) 100%, 0 100%);
+    margin-right: -0.25rem;
+}
+
+.crumbs > li:first-child {
+    border-radius: 0.5rem 0 0 0.5rem;
+    padding-left: 0.75rem;
+}
+
+.crumbs > li:not(:first-child) {
+    /* slanted left edge parallel to the previous right edge */
+    clip-path: polygon(0.75rem 0, 100% 0, calc(100% - 0.75rem) 100%, 0 100%);
+    padding-left: 1.75rem;
+}
+
+.crumbs > li:last-child {
+    clip-path: polygon(0.75rem 0, 100% 0, 100% 100%, 0 100%);
+    border-radius: 0 0.5rem 0.5rem 0;
+    margin-right: 0;
+    padding-right: 0.75rem;
+}
+
+.crumbs > li:only-child {
+    clip-path: none;
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.75rem;
+}
+
+.crumbs a,
+a.crumb-back { color: #fff; }
+
+/* Small screens: replace the crumb trail with a single "back one level" button */
+.crumb-back {
+    display: none;
+    margin: 0.5rem 0.75rem;
+    padding: 0.4rem 1rem;
+    background-color: var(--secondary);
+    color: #fff;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+@media (max-width: 639px) {
+    .crumb-back { display: inline-block; }
+    .crumbs { display: none; }
 }

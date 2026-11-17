@@ -85,12 +85,10 @@
                         <div class="catalog-notice__main">
                             <span>Use this extension in <a href="https://makecode.microbit.org/" target="_blank" rel="noopener">MakeCode</a>: open <strong>Extensions</strong> and paste</span>
                             <span class="copy-inline"><code>{{ gitUrl }}</code><button type="button" class="copy-button" title="Copy to clipboard" aria-label="Copy code to clipboard"></button></span>
+                            <span>Need help? <a href="{{ '/guides/loading-makecode-extensions/' | url }}">Here is our step-by-step guide</a>.</span>
                         </div>
                         {%- endif -%}
                         <ul class="catalog-notice__links">
-                            {%- if gitUrl and isMakecode -%}
-                            <li><a href="{{ '/guides/loading-makecode-extensions/' | url }}">New to extensions? Step-by-step guide</a></li>
-                            {%- endif -%}
                             {%- if showSales -%}
                             <li><a href="mailto:john@tuxie.tech?subject={{ enquirySubject | urlencode }}">Availability and sales enquiries</a></li>
                             {%- endif -%}
